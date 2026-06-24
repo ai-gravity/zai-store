@@ -1,0 +1,101 @@
+{
+  "products": [
+    {
+      "id": "prod_neural_edge",
+      "code": "neural_edge_v3_1",
+      "title": "Z.ai NEURAL EDGE v3.1",
+      "description": "โควตาความเร็วสูง สำหรับงานเขียนโค้ดและพัฒนาแอปขนาดเล็กทั่วไป\n\n- 5 Hours Coding Quota\n- 50k Requests/Min\n- Global Edge Nodes\n- GPT-4o / Claude 3.5 Sonnet support",
+      "price_satang": 49900,
+      "billing_type": "one_time",
+      "stock_limit": null,
+      "stock_remaining": 0,
+      "stock_sold_out": false,
+      "sales_count": 5
+    },
+    {
+      "id": "prod_cyber_core",
+      "code": "cyber_core_v5_2",
+      "title": "Z.ai CYBER CORE v5.2",
+      "description": "ขยายขีดความสามารถขึ้น โควตายาวนานขึ้น เหมาะสำหรับนักพัฒนามืออาชีพ\n\n- 15 Hours Coding Quota\n- 50k Requests/Min\n- Advanced AI Model Access\n- End-to-End Encryption",
+      "price_satang": 99900,
+      "billing_type": "one_time",
+      "stock_limit": null,
+      "stock_remaining": 0,
+      "stock_sold_out": false,
+      "sales_count": 12
+    },
+    {
+      "id": "prod_quantum_link",
+      "code": "quantum_link_v1_0",
+      "title": "Z.ai QUANTUM LINK v1.0",
+      "description": "โควตาความเร็วสูงพิเศษและแบนด์วิดท์ระดับ Enterprise เหมาะกับทีมงานขนาดเล็ก\n\n- 30 Hours Coding Quota\n- 50k Requests/Min\n- Advanced AI Model Access\n- Priority Line Support",
+      "price_satang": 189900,
+      "billing_type": "one_time",
+      "stock_limit": null,
+      "stock_remaining": 0,
+      "stock_sold_out": false,
+      "sales_count": 3
+    },
+    {
+      "id": "prod_ghost_protocol",
+      "code": "ghost_protocol_v4_7",
+      "title": "Z.ai GHOST PROTOCOL v4.7",
+      "description": "โควตาแบบไม่จำกัดและเซิร์ฟเวอร์แบบเฉพาะส่วนตัว (Dedicated API) สำหรับงานโปรเจกต์ขนาดใหญ่\n\n- Unlimited Coding Quota\n- Dedicated API Endpoints\n- End-to-End Encryption\n- 24/7 Dedicated Account Manager",
+      "price_satang": 349900,
+      "billing_type": "one_time",
+      "stock_limit": null,
+      "stock_remaining": 0,
+      "stock_sold_out": false,
+      "sales_count": 1
+    }
+  ],
+  "keys": [
+    {
+      "id": "key_seed_1",
+      "product_code": "neural_edge_v3_1",
+      "key": "z-ai-key-neural-edge-seed1-8842",
+      "sold": false,
+      "purchaser_email": null,
+      "purchase_date": null
+    },
+    {
+      "id": "key_seed_2",
+      "product_code": "neural_edge_v3_1",
+      "key": "z-ai-key-neural-edge-seed2-9011",
+      "sold": false,
+      "purchaser_email": null,
+      "purchase_date": null
+    },
+    {
+      "id": "key_seed_3",
+      "product_code": "cyber_core_v5_2",
+      "key": "z-ai-key-cyber-core-seed1-4321",
+      "sold": false,
+      "purchaser_email": null,
+      "purchase_date": null
+    },
+    {
+      "id": "key_seed_4",
+      "product_code": "quantum_link_v1_0",
+      "key": "z-ai-key-quantum-link-seed1-2299",
+      "sold": false,
+      "purchaser_email": null,
+      "purchase_date": null
+    },
+    {
+      "id": "key_seed_5",
+      "product_code": "ghost_protocol_v4_7",
+      "key": "z-ai-key-ghost-protocol-seed1-7711",
+      "sold": false,
+      "purchaser_email": null,
+      "purchase_date": null
+    }
+  ],
+  "purchases": [],
+  "config": {
+    "adminEmail": "cyber_n0mad@zmail.com",
+    "googleClientId": "",
+    "stripeSecretKey": "",
+    "stripeWebhookSecret": ""
+  }
+}

@@ -1,0 +1,11 @@
+name = "zai-store-worker"
+main = "src/index.js"
+compatibility_date = "2024-09-25"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "./public"
+
+[[kv_namespaces]]
+binding = "ZAI_STORE_DB"
+id = "c76c5a1caae74678a669e89f86a50fe0"
