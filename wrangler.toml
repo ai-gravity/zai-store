@@ -1,10 +1,8 @@
 name = "zai-store"
-main = "src/index.js"
 compatibility_date = "2024-09-25"
 compatibility_flags = ["nodejs_compat"]
 
-[assets]
-directory = "./public"
+pages_build_output_dir = "./public"
 
 [[kv_namespaces]]
 binding = "ZAI_STORE_DB"
