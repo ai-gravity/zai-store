@@ -351,8 +351,8 @@ app.get('/api/admin/inventory', authenticate, requireAdmin, async (c) => {
 })
 
 
-// GLM Monitor API Mocks (Admin Only)
-app.get('/glm/api/usage', authenticate, requireAdmin, (c) => {
+// GLM Monitor API Mocks
+app.get('/glm/api/usage', (c) => {
   return c.json({
     success: true,
     data: {
@@ -364,7 +364,7 @@ app.get('/glm/api/usage', authenticate, requireAdmin, (c) => {
     }
   });
 });
-app.get('/glm/api/model-usage', authenticate, requireAdmin, (c) => {
+app.get('/glm/api/model-usage', (c) => {
   return c.json({
     success: true,
     data: {
@@ -373,7 +373,7 @@ app.get('/glm/api/model-usage', authenticate, requireAdmin, (c) => {
     }
   });
 });
-app.get('/glm/api/system-status', authenticate, requireAdmin, (c) => {
+app.get('/glm/api/system-status', (c) => {
   return c.json({ success: true, data: { speed: 1.5 } });
 });
 

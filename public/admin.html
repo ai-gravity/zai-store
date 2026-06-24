@@ -279,7 +279,7 @@
       };
 
       window.mockLogin = function() {
-        var email = prompt("กรุณากรอก Admin Gmail ของคุณเพื่อเข้าสู่ระบบ (เช่น admin@gmail.com):");
+        var email = prompt("กรุณากรอก Admin Gmail ของคุณเพื่อเข้าสู่ระบบ (เช่น aitestgravity@gmail.com):");
         if (email) {
           var mockPayload = { email: email, picture: "", name: "Admin", exp: (Date.now()/1000) + 86400 };
           var mockToken = "mock." + btoa(JSON.stringify(mockPayload)) + ".signature";

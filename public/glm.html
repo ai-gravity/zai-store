@@ -163,34 +163,23 @@
       .range-tabs { width: 100%; }
       .range-btn { flex: 1; padding: 0 8px; }
       .trend-wrap { height: 240px; }
-      .system-wrap { height: 240px; }
+      .system-wrap { height: 240px; margin-top: 10px; }
     }
-    .admin-auth-block { text-align: center; margin-top: 100px; padding: 0 20px; }
-    .admin-auth-block p { color: var(--muted); margin-bottom: 20px; font-family: var(--sans); }
-    .hidden { display: none !important; }
-    .btn-login { padding: 12px 24px; font-size: 1.1rem; background: #EA4335; color: white; border: none; border-radius: 8px; font-family: var(--sans); cursor: pointer; }
-    .btn-login:hover { background: #d33828; }
+    .home-link { position: fixed; top: 20px; left: 22px; z-index: 5; display: inline-flex; align-items: center; gap: 7px; height: 40px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-2); padding: 0 15px; font-family: var(--mono); font-size: .78rem; text-decoration: none; }
+    .home-link:hover { border-color: var(--accent); color: var(--accent-ink); }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-  <div id="authRequired" class="admin-auth-block">
-    <h1 style="font-family: var(--serif); color: var(--fg); font-size: 2rem; margin-bottom: 10px;">Admin Authentication</h1>
-    <p>หน้านี้เฉพาะผู้ดูแลระบบ (Admin) เท่านั้น</p>
-    <div style="display:flex; justify-content:center;">
-      <button class="btn-login" onclick="mockLogin()">Log in ด้วย Gmail (Admin)</button>
-    </div>
+  <div class="topbar">
+    <a class="home-link" href="/" aria-label="หน้าแรก" title="หน้าแรก">← Store</a>
+    <button class="toggle" id="themeToggle" aria-label="Toggle color theme" title="Toggle theme">
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" /></svg>
+    </button>
   </div>
 
-  <div id="appContainer" class="container hidden">
-    <div class="topbar">
-      <a class="home-link" href="/" aria-label="หน้าแรก" title="หน้าแรก">← Store</a>
-      <button class="toggle" id="themeToggle" aria-label="Toggle color theme" title="Toggle theme">
-        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
-        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" /></svg>
-      </button>
-    </div>
+  <div class="container">
 
     <div class="header reveal d1">
       <div class="eyebrow">GLM Coding Plan · z.ai quota</div>
@@ -199,6 +188,7 @@
         ติดตาม <strong>quota ของ GLM Coding Plan</strong> แบบเรียลไทม์ — โควตา 5 ชั่วโมง, Web Search / Reader / Zread รายเดือน และเวลารอบถัดไป
       </p>
       
+      <!-- Key input box -->
       <div class="key-input-card">
         <label for="keyCheckerInput">ป้อนคีย์ zai-apikey ที่ซื้อเพื่อสแกนสถานะ</label>
         <div class="checker-row">
@@ -294,71 +284,9 @@
       const next = cur === "light" ? "dark" : "light";
       root.setAttribute("data-theme", next);
       localStorage.setItem("glm-theme", next);
+      renderTrend();
+      renderSystemStatus();
     });
-
-    /* ---- Auth Logic ---- */
-    const TOKEN_KEY = "zaistore_token";
-
-    window.mockLogin = function() {
-      var email = prompt("กรุณากรอก Admin Gmail ของคุณเพื่อเข้าสู่ระบบ (เช่น aitestgravity@gmail.com):");
-      if (email) {
-        var mockPayload = { email: email, picture: "", name: "Admin", exp: (Date.now()/1000) + 86400 };
-        var mockToken = "mock." + btoa(JSON.stringify(mockPayload)) + ".signature";
-        state.token = mockToken; 
-        state.user = mockPayload;
-        localStorage.setItem(TOKEN_KEY, mockToken);
-        checkAccess();
-      }
-    };
-
-    function decodeJwt(token) {
-      try {
-        return JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
-      } catch (e) { return null; }
-    }
-    function tokenValid(token) {
-      let p = decodeJwt(token);
-      return p && p.exp > (Date.now() / 1000);
-    }
-
-    function initAuth() {
-      var cached = localStorage.getItem(TOKEN_KEY);
-      if (cached && tokenValid(cached)) {
-        state.token = cached;
-        state.user = decodeJwt(cached);
-        checkAccess();
-      }
-    }
-
-    function checkAccess() {
-      if (!state.user) return;
-      
-      fetch("/api/admin/config").then(r => r.json()).then(conf => {
-        state.adminEmail = (conf.adminEmail || "aitestgravity@gmail.com").toLowerCase();
-        
-        if (state.user.email.toLowerCase() === state.adminEmail) {
-          $("authRequired").classList.add("hidden");
-          $("appContainer").classList.remove("hidden");
-          
-          const urlParams = new URLSearchParams(window.location.search);
-          const pk = urlParams.get('key');
-          if (pk) {
-            $("keyCheckerInput").value = pk;
-            queryData();
-          } else {
-            $("keyCheckerInput").value = "GLM_SK_DEMO_KEY";
-            queryData();
-          }
-        } else {
-          alert("ไม่มีสิทธิ์เข้าถึง: เฉพาะผู้ดูแลระบบเท่านั้น");
-          localStorage.removeItem(TOKEN_KEY);
-          state.user = null;
-          state.token = null;
-        }
-      });
-    }
-
-    initAuth();
 
     /* ---- fetch data ---- */
     async function queryData() {
@@ -366,7 +294,7 @@
       if (!key) return;
 
       try {
-        const r = await fetch(`/glm/api/usage?key=${encodeURIComponent(key)}`, { headers: { 'Authorization': 'Bearer ' + state.token } });
+        const r = await fetch(`/glm/api/usage?key=${encodeURIComponent(key)}`);
         if (!r.ok) throw new Error("HTTP Status " + r.status);
         const res = await r.json();
         if (res.success) {
@@ -379,7 +307,7 @@
 
       try {
         // Load charts data
-        const rModel = await fetch(`/glm/api/model-usage`, { headers: { 'Authorization': 'Bearer ' + state.token } });
+        const rModel = await fetch(`/glm/api/model-usage`);
         const resModel = await rModel.json();
         if (resModel.success) {
           state.modelUsage = resModel.data;
@@ -390,7 +318,7 @@
       } catch (e) {}
 
       try {
-        const rSys = await fetch(`/glm/api/system-status`, { headers: { 'Authorization': 'Bearer ' + state.token } });
+        const rSys = await fetch(`/glm/api/system-status`);
         const resSys = await rSys.json();
         if (resSys.success) {
           state.systemStatus = resSys.data;
