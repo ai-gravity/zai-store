@@ -115,25 +115,6 @@
 
       <div class="admin-grid">
         
-        <!-- Add stock key form -->
-        <div class="card">
-          <h2 class="card-title">เพิ่มสต็อกคีย์ zai-apikey</h2>
-          <form id="addKeysForm">
-            <div class="form-group">
-              <label for="productSelect">เลือกแพ็คเกจที่ตรงกัน</label>
-              <select id="productSelect" required>
-                <option value="">กำลังโหลดแพ็คเกจ...</option>
-              </select>
-            </div>
-            
-            <div class="form-group">
-              <label for="keysListArea">รายการคีย์ที่ต้องการนำเข้า (วางทีละแถว)</label>
-              <textarea id="keysListArea" placeholder="z-ai-key-tier-xxxx-1&#10;z-ai-key-tier-xxxx-2&#10;z-ai-key-tier-xxxx-3" required></textarea>
-            </div>
-
-            <button type="submit" class="btn primary" style="width:100%; justify-content:center;">นำเข้าคีย์เข้าระบบ</button>
-          </form>
-        </div>
 
         <!-- Configuration Settings form -->
         <div class="card">
@@ -230,29 +211,6 @@
         </div>
       </div>
 
-      <!-- Inventory list table -->
-      <div class="card" style="margin-top:30px;">
-        <h2 class="card-title">คลังเก็บคีย์ทั้งหมดในระบบ</h2>
-        <div style="overflow-x:auto;">
-          <table>
-            <thead>
-              <tr>
-                <th>Package Code</th>
-                <th>API Key</th>
-                <th>Status</th>
-                <th>Purchaser Email</th>
-                <th>Purchase Date</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="keysInventoryTable">
-              <tr>
-                <td colspan="6" style="text-align:center; color:var(--muted);">กำลังโหลดข้อมูลคลังสินค้า...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
 
     </div>
   </main>
