@@ -303,14 +303,6 @@
         return "฿" + (satang / 100).toLocaleString("th-TH");
       }
 
-      /* Check for checkout success flash in URL query */
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('checkout_success') === 'true') {
-        toast("ชำระเงินสำเร็จ! คีย์ถูกส่งเข้ามาในคลังของคุณแล้ว", "ok");
-        // clean query parameters
-        window.history.replaceState({}, document.title, "/");
-      }
-
       /* ---- Auth logic ---- */
       window.handleCredential = function (resp) {
         var token = resp.credential;
