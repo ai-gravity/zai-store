@@ -334,8 +334,8 @@ app.get('/glm/api/usage', async (c) => {
   }
 
   try {
-    // Call Zhipu AI (GLM) usage endpoint
-    const res = await fetch('https://open.bigmodel.cn/api/monitor/usage/quota/limit', {
+    // Call Z.ai usage endpoint
+    const res = await fetch('https://api.z.ai/api/monitor/usage/quota/limit', {
       headers: { 'Authorization': 'Bearer ' + globalKey }
     });
     
