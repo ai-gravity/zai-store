@@ -59,7 +59,7 @@ async function authenticate(c, next) {
       c.set('user', payload)
       return next()
     } catch (e) {
-      c.set('user', { email: 'cyber_n0mad@zmail.com', picture: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&auto=format&fit=crop&q=60' })
+      c.set('user', { email: 'aitestgravity@gmail.com', picture: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&auto=format&fit=crop&q=60' })
       return next()
     }
   }
@@ -82,7 +82,7 @@ async function authenticate(c, next) {
 // Admin checking middleware
 async function requireAdmin(c, next) {
   const db = await readDB(c)
-  const adminEmail = (db.config.adminEmail || c.env.ADMIN_EMAIL || 'cyber_n0mad@zmail.com').toLowerCase()
+  const adminEmail = (db.config.adminEmail || c.env.ADMIN_EMAIL || 'aitestgravity@gmail.com').toLowerCase()
   const user = c.get('user')
   if (user && user.email.toLowerCase() === adminEmail) {
     return next()
@@ -351,8 +351,8 @@ app.get('/api/admin/inventory', authenticate, requireAdmin, async (c) => {
 })
 
 
-// GLM Monitor API Mocks
-app.get('/glm/api/usage', (c) => {
+// GLM Monitor API Mocks (Admin Only)
+app.get('/glm/api/usage', authenticate, requireAdmin, (c) => {
   return c.json({
     success: true,
     data: {
@@ -364,7 +364,7 @@ app.get('/glm/api/usage', (c) => {
     }
   });
 });
-app.get('/glm/api/model-usage', (c) => {
+app.get('/glm/api/model-usage', authenticate, requireAdmin, (c) => {
   return c.json({
     success: true,
     data: {
@@ -373,7 +373,7 @@ app.get('/glm/api/model-usage', (c) => {
     }
   });
 });
-app.get('/glm/api/system-status', (c) => {
+app.get('/glm/api/system-status', authenticate, requireAdmin, (c) => {
   return c.json({ success: true, data: { speed: 1.5 } });
 });
 
