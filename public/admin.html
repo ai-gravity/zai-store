@@ -150,6 +150,11 @@
             </div>
 
             <div class="form-group">
+              <label for="globalApiKeyInput">Global API Key (สำหรับแสดงสถิติในหน้า Usage Monitor)</label>
+              <input type="text" id="globalApiKeyInput" placeholder="ZAI-APIKEY-..." />
+            </div>
+
+            <div class="form-group">
               <label for="stripeSecretInput">Stripe Secret Key (sk_test_...)</label>
               <input type="text" id="stripeSecretInput" placeholder="เว้นว่างไว้เพื่อใช้งานระบบชำระเงินจำลอง (Mock Stripe)" />
             </div>
@@ -335,6 +340,7 @@
           state.config = conf;
           document.getElementById("adminEmailInput").value = conf.adminEmail || "";
           document.getElementById("googleClientInput").value = conf.googleClientId || "";
+          document.getElementById("globalApiKeyInput").value = conf.globalApiKey || "";
           document.getElementById("stripeSecretInput").value = conf.stripeSecretKey || "";
         });
 
@@ -474,12 +480,18 @@
         e.preventDefault();
         var email = document.getElementById("adminEmailInput").value;
         var googleClient = document.getElementById("googleClientInput").value;
+        var globalApiKey = document.getElementById("globalApiKeyInput").value;
         var stripeSecret = document.getElementById("stripeSecretInput").value;
 
         api("/api/admin/config", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ adminEmail: email, googleClientId: googleClient, stripeSecretKey: stripeSecret })
+          body: JSON.stringify({ 
+            adminEmail: email, 
+            googleClientId: googleClient, 
+            globalApiKey: globalApiKey,
+            stripeSecretKey: stripeSecret 
+          })
         }).then(r => r.json()).then(res => {
           if (res.success) {
             toast("บันทึกการตั้งค่าใหม่เรียบร้อยแล้ว", "ok");

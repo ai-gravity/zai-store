@@ -352,11 +352,14 @@ app.get('/api/admin/inventory', authenticate, requireAdmin, async (c) => {
 
 
 // GLM Monitor API Mocks
-app.get('/glm/api/usage', (c) => {
+app.get('/glm/api/usage', async (c) => {
+  const db = await readDB(c)
+  const globalKey = db.config?.globalApiKey || 'NONE'
+  
   return c.json({
     success: true,
     data: {
-      level: 'Premium',
+      level: 'Premium (Global Key: ' + (globalKey !== 'NONE' ? 'SET' : 'NOT SET') + ')',
       limits: [
         { type: 'TOKENS_LIMIT', usage: 1200000, limit: 5000000, resetInSec: 3600 },
         { type: 'TIME_LIMIT', usage: 15, limit: 100, resetInSec: 86400 }
