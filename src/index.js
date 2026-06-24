@@ -377,4 +377,9 @@ app.get('/glm/api/system-status', (c) => {
   return c.json({ success: true, data: { speed: 1.5 } });
 });
 
+// Fallback to Pages static assets
+app.get('*', async (c) => {
+  return await c.env.ASSETS.fetch(c.req.raw)
+})
+
 export default app
