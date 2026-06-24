@@ -4,7 +4,7 @@
 
 ## รายละเอียดบริการ
 
-- Provider: Z.ai / GLM
+- Provider: zai-apikey / GLM
 - Model หลัก: `glm-5.2`
 - Endpoint แบบ Anthropic-compatible:
 
