@@ -165,8 +165,9 @@
             <input type="number" id="newProdPrice" placeholder="10000" required />
           </div>
           <div class="form-group" style="grid-column: span 2;">
-            <label for="newProdImage">URL รูปภาพปกสินค้า (Image URL)</label>
-            <input type="url" id="newProdImage" placeholder="https://example.com/image.png" />
+            <label for="newProdImageFile">รูปภาพปกสินค้า (อัปโหลดจากเครื่อง)</label>
+            <input type="file" id="newProdImageFile" accept="image/*" style="padding-top:6px;" />
+            <input type="hidden" id="newProdImageBase64" />
           </div>
           <div class="form-group">
             <label for="newProdExpiry">วันหมดอายุของแพ็คเกจนี้ (Expiry Date)</label>
@@ -369,7 +370,7 @@
             price_satang: document.getElementById("newProdPrice").value,
             expiry_date: document.getElementById("newProdExpiry").value,
             description: document.getElementById("newProdDesc").value,
-            image_url: document.getElementById("newProdImage").value,
+            image_url: document.getElementById("newProdImageBase64").value || "",
             stock_limit: document.getElementById("newProdStock").value,
             delivery_content: document.getElementById("newProdDelivery").value,
             is_active: true
@@ -420,6 +421,32 @@
             toast("บันทึกข้อมูลล้มเหลว", "err");
           }
         });
+      });
+      // Handle File Upload and Compression
+      document.getElementById('newProdImageFile').addEventListener('change', function(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(evt) {
+          var img = new Image();
+          img.onload = function() {
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d');
+            var maxW = 600, maxH = 600;
+            var width = img.width, height = img.height;
+            if (width > height && width > maxW) {
+              height *= maxW / width; width = maxW;
+            } else if (height > maxH) {
+              width *= maxH / height; height = maxH;
+            }
+            canvas.width = width; canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+            document.getElementById('newProdImageBase64').value = canvas.toDataURL('image/jpeg', 0.85);
+            toast("โหลดรูปภาพสำเร็จ!", "ok");
+          };
+          img.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
       });
 
     })();
