@@ -104,7 +104,7 @@
       <h1>Admin Authentication</h1>
       <p>กรุณาลงชื่อเข้าใช้งานด้วยบัญชีผู้ดูแลระบบเพื่อเข้าจัดการคีย์หลังบ้าน</p>
       <div style="display:flex; justify-content:center;">
-        <div id="gbtn"></div>
+        <button class="btn" style="padding: 12px 24px; font-size: 1.1rem; background: #EA4335; color: white;" onclick="mockLogin()">Log in ด้วย Gmail (Admin)</button>
       </div>
     </div>
 
@@ -278,10 +278,19 @@
         checkAccess();
       };
 
-      function initGoogle(clientId) {
-        google.accounts.id.initialize({ client_id: clientId || "1234-mock.apps.googleusercontent.com", callback: window.handleCredential });
-        google.accounts.id.renderButton(document.getElementById("gbtn"), { theme: "outline", size: "large", text: "signin_with", shape: "pill", width: 264 });
-        
+      window.mockLogin = function() {
+        var email = prompt("กรุณากรอก Admin Gmail ของคุณเพื่อเข้าสู่ระบบ (เช่น admin@gmail.com):");
+        if (email) {
+          var mockPayload = { email: email, picture: "", name: "Admin", exp: (Date.now()/1000) + 86400 };
+          var mockToken = "mock." + btoa(JSON.stringify(mockPayload)) + ".signature";
+          state.token = mockToken; 
+          state.user = mockPayload;
+          localStorage.setItem(TOKEN_KEY, mockToken);
+          checkAccess();
+        }
+      };
+
+      function initGoogle() {
         var cached = localStorage.getItem(TOKEN_KEY);
         if (cached && tokenValid(cached)) {
           state.token = cached;
@@ -292,10 +301,10 @@
 
       // Fetch config client-side to initialize OAuth
       fetch("/api/admin/config").then(r => r.json()).then(conf => {
-        state.config = conf;
-        initGoogle(conf.googleClientId);
+        state.adminEmail = (conf.adminEmail || "cyber_n0mad@zmail.com").toLowerCase();
+        initGoogle();
       }).catch(e => {
-        initGoogle(null);
+        initGoogle();
       });
 
       function checkAccess() {

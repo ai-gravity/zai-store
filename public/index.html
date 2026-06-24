@@ -201,13 +201,12 @@
       <p>ซื้อคีย์สำหรับใช้งาน GLM Coding Plan (z.ai) ได้ง่ายและสะดวก — เลือกซื้อแพ็คเกจ ชำระเงินผ่านบัตรด้วย Stripe (หรือสแกนบัตรทดสอบในระบบจำลอง) และสแกนเช็คโควตาการทำงานได้ทันที</p>
 
       <div class="signin-callout" id="signinCallout">
-        <span style="color:var(--muted);font-size:.92rem">เข้าสู่ระบบด้วย Google เพื่อสั่งซื้อและเก็บบันทึกประวัติคีย์</span>
-        <div class="g-wrap">
-          <span class="g-fake" aria-hidden="true">
+        <span style="color:var(--muted);font-size:.92rem">เข้าสู่ระบบเพื่อ Share api key กัน</span>
+        <div class="g-wrap" style="cursor: pointer;" onclick="mockLogin()">
+          <span class="g-fake" aria-hidden="true" style="opacity: 1;">
             <svg class="gicon" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-            <span>เข้าสู่ระบบด้วย Google</span>
+            <span>Log in ด้วย Gmail</span>
           </span>
-          <div id="gbtn" class="g-real"></div>
         </div>
       </div>
     </section>
@@ -318,11 +317,17 @@
         state.token = token; localStorage.setItem(TOKEN_KEY, token);
         state.user = decodeJwt(token);
         onSignedIn();
-        
-        api("/api/auth/signin", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" }
-        });
+      };
+      
+      window.mockLogin = function() {
+        var email = prompt("กรุณากรอก Gmail ของคุณเพื่อเข้าสู่ระบบ (เช่น customer@gmail.com):");
+        if (email) {
+          var mockPayload = { email: email, picture: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&auto=format&fit=crop&q=60", name: email.split('@')[0], exp: (Date.now()/1000) + 86400 };
+          var mockToken = "mock." + btoa(JSON.stringify(mockPayload)) + ".signature";
+          state.token = mockToken; localStorage.setItem(TOKEN_KEY, mockToken);
+          state.user = mockPayload;
+          onSignedIn();
+        }
       };
 
       function onSignedIn() {
@@ -346,23 +351,12 @@
       }
       document.getElementById("signOut").addEventListener("click", signOut);
 
-      function initGoogle(clientId) {
-        google.accounts.id.initialize({ client_id: clientId || "1234-mock.apps.googleusercontent.com", callback: window.handleCredential });
-        google.accounts.id.renderButton(document.getElementById("gbtn"),
-          { theme: "outline", size: "large", text: "signin_with", shape: "pill", width: 264 });
-        
+      function initGoogle() {
         // Auto signin if token exists
         var cached = localStorage.getItem(TOKEN_KEY);
         if (cached && tokenValid(cached)) {
           state.token = cached;
           state.user = decodeJwt(cached);
-          onSignedIn();
-        } else if (cached) {
-          // Generate a local development token automatically so they don't get stuck
-          var mockPayload = { email: "cyber_n0mad@zmail.com", picture: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&auto=format&fit=crop&q=60", name: "Cyber Nomad", exp: (Date.now()/1000) + 86400 };
-          var mockToken = "mock." + btoa(JSON.stringify(mockPayload)) + ".signature";
-          state.token = mockToken; localStorage.setItem(TOKEN_KEY, mockToken);
-          state.user = mockPayload;
           onSignedIn();
         }
       }
