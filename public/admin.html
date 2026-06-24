@@ -436,57 +436,6 @@
           loadProductsList();
         });
       };
-      
-
-              : '<span class="status-badge unsold">Unsold</span>';
-            var purchaser = k.purchaser_email || "—";
-            var date = k.purchase_date || "—";
-            
-            return '<tr>' +
-              '<td>' + k.product_code + '</td>' +
-              '<td style="font-family:var(--mono);">' + k.key + '</td>' +
-              '<td>' + statusBadge + '</td>' +
-              '<td>' + purchaser + '</td>' +
-              '<td>' + date + '</td>' +
-              '<td><button class="delete-btn" onclick="deleteKey(\'' + k.id + '\')">ลบ</button></td>' +
-            '</tr>';
-          }).join("");
-        });
-      }
-
-      window.deleteKey = function(id) {
-        if (!confirm("คุณแน่ใจหรือไม่ว่าต้องการลบคีย์รายการนี้ออกจากคลังสินค้า?")) return;
-        
-        api("/api/admin/keys/" + id, { method: "DELETE" }).then(r => r.json()).then(res => {
-          if (res.success) {
-            toast("ลบคีย์สำเร็จแล้ว", "ok");
-            
-          } else {
-            toast("ลบคีย์ล้มเหลว", "err");
-          }
-        });
-      };
-
-      // Handle Key Import form submit
-      // keys form removed, function (e) {
-        e.preventDefault();
-        var prodCode = document.getElementById("productSelect").value;
-        var keysList = document.getElementById("keysListArea").value;
-
-        api("/api/admin/keys", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ product_code: prodCode, keysList: keysList })
-        }).then(r => r.json()).then(res => {
-          if (res.success) {
-            toast("นำเข้าคีย์ใหม่ " + res.count + " คีย์ สำเร็จเรียบร้อยแล้ว!", "ok");
-            document.getElementById("keysListArea").value = "";
-            
-          } else {
-            toast("นำเข้าคีย์ล้มเหลว", "err");
-          }
-        });
-      });
 
       // Handle Config Update form submit
       document.getElementById("configForm").addEventListener("submit", function (e) {
