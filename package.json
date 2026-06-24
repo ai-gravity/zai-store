@@ -1,0 +1,18 @@
+{
+  "name": "zai-api-store",
+  "version": "1.0.0",
+  "description": "Z.ai API Key Store and Quota Monitor",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "google-auth-library": "^9.11.0",
+    "hono": "^4.12.27",
+    "stripe": "^15.12.0"
+  }
+}

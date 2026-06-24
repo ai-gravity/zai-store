@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Z.ai Store Admin Dashboard</title>
+  <meta name="theme-color" content="#cd6f4d" />
+  
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg: #f4f2ea; --bg-2: #efece1; --fg: #1c1b17; --muted: #6f6b60;
+      --line: #e0dccf; --accent: #cd6f4d; --accent-ink: #b85c3b;
+      --accent-soft: rgba(205,111,77,.12); --hover-bg: #ebe7da;
+      --ok: #4f8a5b; --max: 940px;
+      --serif: "Fraunces", Georgia, serif;
+      --sans: "Hanken Grotesk", -apple-system, BlinkMacSystemFont, sans-serif;
+      --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+    }
+    [data-theme="dark"] {
+      --bg: #1e1c18; --bg-2: #24221d; --fg: #ece7da; --muted: #9c9587;
+      --line: #36332b; --accent: #e1875f; --accent-ink: #ec9978;
+      --accent-soft: rgba(225,135,95,.14); --hover-bg: #28251f;
+      --ok: #7bb588;
+    }
+    *,*::before,*::after { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--fg);
+      font-family: var(--sans); font-size: 16px; line-height: 1.6;
+      transition: background .3s ease, color .3s ease;
+    }
+    a { color: inherit; text-decoration: none; }
+    main { max-width: var(--max); margin: 0 auto; padding: 60px 24px 80px; }
+
+    /* topbar */
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 40px; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; font-family: var(--serif); font-weight: 600; font-size: 1.25rem; }
+    .brand .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 16px;
+      border: 1px solid var(--line); border-radius: 10px; background: var(--bg-2);
+      color: var(--fg); font-family: var(--mono); font-size: .82rem; font-weight: 500;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn:hover { border-color: var(--accent); color: var(--accent-ink); }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn.primary:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
+
+    h1 { font-family: var(--serif); font-size: 2.4rem; font-weight: 600; margin: 0 0 20px; }
+    
+    .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px; }
+    @media (max-width: 768px) { .admin-grid { grid-template-columns: 1fr; } }
+
+    .card { background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px; padding: 22px; margin-bottom: 20px; }
+    .card-title { font-family: var(--serif); font-size: 1.25rem; font-weight: 600; margin-bottom: 15px; color: var(--accent-ink); }
+    
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .form-group label { font-size: 0.85rem; font-weight: 600; color: var(--muted); }
+    .form-group input, .form-group textarea, .form-group select {
+      height: 40px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line);
+      background: var(--bg); color: var(--fg); outline: none; font-family: inherit; font-size: 0.9rem;
+    }
+    .form-group textarea { height: 100px; padding: 10px 12px; font-family: var(--mono); }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--accent); }
+
+    /* Keys Table styling */
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.88rem; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+    th { font-weight: 600; color: var(--muted); }
+    tr:hover td { background: rgba(0,0,0,0.02); }
+    .status-badge { font-family: var(--mono); font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; }
+    .status-badge.sold { background: rgba(79, 138, 91, 0.15); color: var(--ok); }
+    .status-badge.unsold { background: rgba(0,0,0,0.05); color: var(--muted); }
+
+    .delete-btn { background: transparent; border: none; color: #b3402f; cursor: pointer; font-size: 0.8rem; text-decoration: underline; }
+    .delete-btn:hover { color: red; }
+
+    #toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px);
+      z-index: 50; background: var(--fg); color: var(--bg); padding: 12px 20px; border-radius: 12px;
+      font-size: .9rem; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; max-width: 90vw; }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.ok { background: var(--ok); color: #fff; }
+    #toast.err { background: #b3402f; color: #fff; }
+
+    .admin-auth-block { text-align: center; margin-top: 100px; }
+    .admin-auth-block p { color: var(--muted); margin-bottom: 20px; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <main>
+    <div class="topbar">
+      <a class="brand" href="/"><span class="dot"></span>Z.ai Store Admin</a>
+      <a class="btn" href="/">← กลับหน้าหลัก</a>
+    </div>
+
+    <!-- Login requirement panel -->
+    <div id="authRequired" class="admin-auth-block">
+      <h1>Admin Authentication</h1>
+      <p>กรุณาลงชื่อเข้าใช้งานด้วยบัญชีผู้ดูแลระบบเพื่อเข้าจัดการคีย์หลังบ้าน</p>
+      <div style="display:flex; justify-content:center;">
+        <div id="gbtn"></div>
+      </div>
+    </div>
+
+    <!-- Main Admin Dashboard Content -->
+    <div id="adminContent" class="hidden">
+      <h1>แผงจัดการคีย์ระบบ Z.ai Store</h1>
+      <p style="color:var(--muted); margin-bottom: 30px;">จัดการสต็อกคีย์ นำเข้าคีย์สำหรับจำหน่ายเป็นรอบๆ และตั้งค่า Stripe/Google Integration</p>
+
+      <div class="admin-grid">
+        
+        <!-- Add stock key form -->
+        <div class="card">
+          <h2 class="card-title">เพิ่มสต็อกคีย์ Z.ai</h2>
+          <form id="addKeysForm">
+            <div class="form-group">
+              <label for="productSelect">เลือกแพ็คเกจที่ตรงกัน</label>
+              <select id="productSelect" required>
+                <option value="">กำลังโหลดแพ็คเกจ...</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="keysListArea">รายการคีย์ที่ต้องการนำเข้า (วางทีละแถว)</label>
+              <textarea id="keysListArea" placeholder="z-ai-key-tier-xxxx-1&#10;z-ai-key-tier-xxxx-2&#10;z-ai-key-tier-xxxx-3" required></textarea>
+            </div>
+
+            <button type="submit" class="btn primary" style="width:100%; justify-content:center;">นำเข้าคีย์เข้าระบบ</button>
+          </form>
+        </div>
+
+        <!-- Configuration Settings form -->
+        <div class="card">
+          <h2 class="card-title">ตั้งค่าผู้ให้บริการ (Config)</h2>
+          <form id="configForm">
+            <div class="form-group">
+              <label for="adminEmailInput">อีเมลผู้ดูแลระบบ (Admin Email)</label>
+              <input type="email" id="adminEmailInput" placeholder="cyber_n0mad@zmail.com" required />
+            </div>
+
+            <div class="form-group">
+              <label for="googleClientInput">Google Client ID (สำหรับ OAuth 2.0)</label>
+              <input type="text" id="googleClientInput" placeholder="1234.apps.googleusercontent.com" />
+            </div>
+
+            <div class="form-group">
+              <label for="stripeSecretInput">Stripe Secret Key (sk_test_...)</label>
+              <input type="text" id="stripeSecretInput" placeholder="เว้นว่างไว้เพื่อใช้งานระบบชำระเงินจำลอง (Mock Stripe)" />
+            </div>
+
+            <button type="submit" class="btn" style="width:100%; justify-content:center;">บันทึกการตั้งค่า</button>
+          </form>
+        </div>
+
+      </div>
+
+      <!-- Add Product form -->
+      <div class="card" style="margin-top:30px;">
+        <h2 class="card-title">สร้างสินค้า/แพ็คเกจใหม่</h2>
+        <form id="addProductForm" style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; align-items: start;">
+          <div style="grid-column: span 2;">
+            <div class="form-group">
+              <label for="newProdTitle">ชื่อสินค้า (Title)</label>
+              <input type="text" id="newProdTitle" placeholder="Z.ai PRO PLAN" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="newProdCode">รหัสสินค้า (Product Code) - ภาษาอังกฤษ</label>
+            <input type="text" id="newProdCode" placeholder="pro_plan_v1" required />
+          </div>
+          <div class="form-group">
+            <label for="newProdPrice">ราคา (หน่วยเป็นสตางค์ เช่น 100 บาท = 10000)</label>
+            <input type="number" id="newProdPrice" placeholder="10000" required />
+          </div>
+          <div class="form-group">
+            <label for="newProdExpiry">วันหมดอายุของแพ็คเกจนี้ (Expiry Date)</label>
+            <input type="text" id="newProdExpiry" placeholder="เช่น 31 ธันวาคม 2026 (เว้นว่างได้)" />
+          </div>
+          <div class="form-group" style="grid-column: span 2;">
+            <label for="newProdDesc">รายละเอียดสินค้า (Description)</label>
+            <textarea id="newProdDesc" placeholder="อธิบายรายละเอียดแพ็คเกจ..."></textarea>
+          </div>
+          <div style="grid-column: span 2;">
+            <button type="submit" class="btn primary" style="width:100%; justify-content:center;">สร้างสินค้า</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Products Table -->
+      <div class="card" style="margin-top:30px;">
+        <h2 class="card-title">จัดการแพ็คเกจสินค้าทั้งหมด</h2>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Code</th>
+                <th>Price (฿)</th>
+                <th>Expiry</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="productsTable">
+              <tr><td colspan="5" style="text-align:center; color:var(--muted);">กำลังโหลดข้อมูล...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Inventory list table -->
+      <div class="card" style="margin-top:30px;">
+        <h2 class="card-title">คลังเก็บคีย์ทั้งหมดในระบบ</h2>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Package Code</th>
+                <th>API Key</th>
+                <th>Status</th>
+                <th>Purchaser Email</th>
+                <th>Purchase Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="keysInventoryTable">
+              <tr>
+                <td colspan="6" style="text-align:center; color:var(--muted);">กำลังโหลดข้อมูลคลังสินค้า...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div id="toast"></div>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script>
+    (function () {
+      var TOKEN_KEY = "g_id_token";
+      var state = { token: null, user: null, config: {} };
+
+      function toast(msg, kind) {
+        var t = document.getElementById("toast");
+        t.textContent = msg; t.className = "show" + (kind ? " " + kind : "");
+        clearTimeout(t._t); t._t = setTimeout(function () { t.className = ""; }, 3200);
+      }
+      function decodeJwt(token) {
+        try { return JSON.parse(atob(token.split(".")[1].replace(/-/g,"+").replace(/_/g,"/"))); }
+        catch (e) { return null; }
+      }
+      function tokenValid(token) {
+        var p = decodeJwt(token);
+        return p && p.exp && p.exp * 1000 > Date.now() + 5000;
+      }
+
+      /* API helper */
+      function api(path, opts) {
+        opts = opts || {};
+        opts.headers = opts.headers || {};
+        if (state.token) opts.headers["Authorization"] = "Bearer " + state.token;
+        return fetch(path, opts);
+      }
+
+      /* Google OAuth callback */
+      window.handleCredential = function (resp) {
+        state.token = resp.credential;
+        state.user = decodeJwt(resp.credential);
+        localStorage.setItem(TOKEN_KEY, resp.credential);
+        checkAccess();
+      };
+
+      function initGoogle(clientId) {
+        google.accounts.id.initialize({ client_id: clientId || "1234-mock.apps.googleusercontent.com", callback: window.handleCredential });
+        google.accounts.id.renderButton(document.getElementById("gbtn"), { theme: "outline", size: "large", text: "signin_with", shape: "pill", width: 264 });
+        
+        var cached = localStorage.getItem(TOKEN_KEY);
+        if (cached && tokenValid(cached)) {
+          state.token = cached;
+          state.user = decodeJwt(cached);
+          checkAccess();
+        }
+      }
+
+      // Fetch config client-side to initialize OAuth
+      fetch("/api/admin/config").then(r => r.json()).then(conf => {
+        state.config = conf;
+        initGoogle(conf.googleClientId);
+      }).catch(e => {
+        initGoogle(null);
+      });
+
+      function checkAccess() {
+        if (!state.user) return;
+        
+        // Query config to verify admin privileges on server
+        api("/api/admin/config").then(r => {
+          if (r.ok) {
+            document.getElementById("authRequired").classList.add("hidden");
+            document.getElementById("adminContent").classList.remove("hidden");
+            loadAdminData();
+          } else {
+            toast("สิทธิ์บัญชีล้มเหลว: ไม่ใช่บัญชีผู้ดูแลระบบ", "err");
+            signOut();
+          }
+        });
+      }
+
+      function signOut() {
+        state.token = null; state.user = null; localStorage.removeItem(TOKEN_KEY);
+        document.getElementById("authRequired").classList.remove("hidden");
+        document.getElementById("adminContent").classList.add("hidden");
+      }
+
+      function loadAdminData() {
+        // Load config input values
+        api("/api/admin/config").then(r => r.json()).then(conf => {
+          state.config = conf;
+          document.getElementById("adminEmailInput").value = conf.adminEmail || "";
+          document.getElementById("googleClientInput").value = conf.googleClientId || "";
+          document.getElementById("stripeSecretInput").value = conf.stripeSecretKey || "";
+        });
+
+        loadProductsList();
+        loadInventory();
+      }
+
+      function loadProductsList() {
+        api("/api/products").then(r => r.json()).then(prods => {
+          // Populate select
+          var select = document.getElementById("productSelect");
+          if (prods.length === 0) {
+            select.innerHTML = '<option value="">ไม่มีแพ็คเกจ กรุณาสร้างก่อน</option>';
+          } else {
+            select.innerHTML = prods.map(p => '<option value="'+p.code+'">'+p.title+'</option>').join("");
+          }
+
+          // Populate products table
+          var tbody = document.getElementById("productsTable");
+          if (!prods.length) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--muted);">ยังไม่มีสินค้า</td></tr>';
+            return;
+          }
+          tbody.innerHTML = prods.map(p => {
+            return '<tr>' +
+              '<td>' + p.title + '</td>' +
+              '<td>' + p.code + '</td>' +
+              '<td>' + (p.price_satang / 100).toLocaleString() + '</td>' +
+              '<td>' + (p.expiry_date || "ไม่มีกำหนด") + '</td>' +
+              '<td><button class="delete-btn" onclick="deleteProduct(\'' + p.id + '\')">ลบ</button></td>' +
+            '</tr>';
+          }).join("");
+        });
+      }
+
+      window.deleteProduct = function(id) {
+        if (!confirm("คุณแน่ใจหรือไม่ว่าต้องการลบแพ็คเกจนี้? (คีย์ที่เกี่ยวข้องจะถูกลบไปด้วย)")) return;
+        
+        api("/api/admin/products/" + id, { method: "DELETE" }).then(r => r.json()).then(res => {
+          if (res.success) {
+            toast("ลบสินค้าสำเร็จ", "ok");
+            loadProductsList();
+            loadInventory();
+          } else {
+            toast("ลบสินค้าล้มเหลว", "err");
+          }
+        });
+      };
+
+      // Handle Add Product form submit
+      document.getElementById("addProductForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        api("/api/admin/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: document.getElementById("newProdTitle").value,
+            code: document.getElementById("newProdCode").value,
+            price_satang: document.getElementById("newProdPrice").value,
+            expiry_date: document.getElementById("newProdExpiry").value,
+            description: document.getElementById("newProdDesc").value
+          })
+        }).then(r => r.json()).then(res => {
+          if (res.success) {
+            toast("สร้างสินค้าใหม่สำเร็จ", "ok");
+            this.reset();
+            loadProductsList();
+          } else {
+            toast("สร้างสินค้าล้มเหลว: " + (res.error || ""), "err");
+          }
+        });
+      });
+
+      function loadInventory() {
+        api("/api/admin/keys").then(r => r.json()).then(keys => {
+          var tbody = document.getElementById("keysInventoryTable");
+          if (!keys.length) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--muted);">ไม่มีสินค้าคีย์คงค้างในคลังสินค้า</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = keys.map(k => {
+            var statusBadge = k.sold 
+              ? '<span class="status-badge sold">Sold</span>' 
+              : '<span class="status-badge unsold">Unsold</span>';
+            var purchaser = k.purchaser_email || "—";
+            var date = k.purchase_date || "—";
+            
+            return '<tr>' +
+              '<td>' + k.product_code + '</td>' +
+              '<td style="font-family:var(--mono);">' + k.key + '</td>' +
+              '<td>' + statusBadge + '</td>' +
+              '<td>' + purchaser + '</td>' +
+              '<td>' + date + '</td>' +
+              '<td><button class="delete-btn" onclick="deleteKey(\'' + k.id + '\')">ลบ</button></td>' +
+            '</tr>';
+          }).join("");
+        });
+      }
+
+      window.deleteKey = function(id) {
+        if (!confirm("คุณแน่ใจหรือไม่ว่าต้องการลบคีย์รายการนี้ออกจากคลังสินค้า?")) return;
+        
+        api("/api/admin/keys/" + id, { method: "DELETE" }).then(r => r.json()).then(res => {
+          if (res.success) {
+            toast("ลบคีย์สำเร็จแล้ว", "ok");
+            loadInventory();
+          } else {
+            toast("ลบคีย์ล้มเหลว", "err");
+          }
+        });
+      };
+
+      // Handle Key Import form submit
+      document.getElementById("addKeysForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var prodCode = document.getElementById("productSelect").value;
+        var keysList = document.getElementById("keysListArea").value;
+
+        api("/api/admin/keys", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ product_code: prodCode, keysList: keysList })
+        }).then(r => r.json()).then(res => {
+          if (res.success) {
+            toast("นำเข้าคีย์ใหม่ " + res.count + " คีย์ สำเร็จเรียบร้อยแล้ว!", "ok");
+            document.getElementById("keysListArea").value = "";
+            loadInventory();
+          } else {
+            toast("นำเข้าคีย์ล้มเหลว", "err");
+          }
+        });
+      });
+
+      // Handle Config Update form submit
+      document.getElementById("configForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var email = document.getElementById("adminEmailInput").value;
+        var googleClient = document.getElementById("googleClientInput").value;
+        var stripeSecret = document.getElementById("stripeSecretInput").value;
+
+        api("/api/admin/config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ adminEmail: email, googleClientId: googleClient, stripeSecretKey: stripeSecret })
+        }).then(r => r.json()).then(res => {
+          if (res.success) {
+            toast("บันทึกการตั้งค่าใหม่เรียบร้อยแล้ว", "ok");
+            loadAdminData();
+          } else {
+            toast("บันทึกข้อมูลล้มเหลว", "err");
+          }
+        });
+      });
+
+    })();
+  </script>
+</body>
+</html>

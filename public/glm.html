@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GLM Usage Monitor — Z.ai</title>
+  <meta name="description" content="GLM Coding Plan (z.ai) usage monitor — quota, token usage history, reset countdown, and monthly tool usage." />
+  <meta name="robots" content="noindex,nofollow" />
+  <meta name="theme-color" content="#cd6f4d" />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg: #f4f2ea; --bg-2: #efece1; --bg-3: #e9e5d8; --fg: #1c1b17; --fg-2: #3a382f;
+      --muted: #6f6b60; --muted-2: #8a8478; --line: #e0dccf;
+      --accent: #cd6f4d; --accent-ink: #b85c3b; --accent-soft: rgba(205,111,77,.12);
+      --green: #4f8a5b; --green-soft: rgba(79,138,91,.13);
+      --blue: #4f78a8; --rose: #b56a9c; --gold: #b8923f;
+      --amber: #c08032; --red: #b5564b;
+      --hover-bg: #ebe7da; --grain-opacity: 0.04;
+      --serif: "Fraunces", Georgia, serif;
+      --sans: "Hanken Grotesk", -apple-system, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+    }
+    [data-theme="dark"] {
+      --bg: #1e1c18; --bg-2: #24221d; --bg-3: #28251f; --fg: #ece7da; --fg-2: #d4cfc2;
+      --muted: #9c9587; --muted-2: #706b5f; --line: #36332b;
+      --accent: #e1875f; --accent-ink: #ec9978; --accent-soft: rgba(225,135,95,.14);
+      --green: #6dbf7b; --green-soft: rgba(109,191,123,.14);
+      --blue: #7ba6d4; --rose: #d39bc6; --gold: #d4b86a;
+      --amber: #d4a05a; --red: #d07569;
+      --hover-bg: #28251f; --grain-opacity: 0.035;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: var(--sans);
+      background: radial-gradient(ellipse at 50% -12%, var(--accent-soft) 0%, transparent 54%), var(--bg);
+      color: var(--fg); min-height: 100vh; line-height: 1.65;
+      -webkit-font-smoothing: antialiased; transition: background .3s ease, color .3s ease;
+      position: relative; overflow-x: hidden;
+    }
+    body::before {
+      content: ""; position: fixed; top: -10%; left: 50%; width: 120vw; height: 62vh;
+      transform: translateX(-50%);
+      background: radial-gradient(ellipse at center, var(--accent-soft) 0%, rgba(184,146,63,.045) 26%, transparent 64%);
+      pointer-events: none; z-index: 0;
+    }
+    body::after {
+      content: ''; position: fixed; inset: 0; opacity: var(--grain-opacity);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 1;
+    }
+    a { color: inherit; }
+
+    .topbar { position: fixed; top: 20px; right: 22px; z-index: 30; display: flex; align-items: center; gap: 10px; }
+    .home-link, .toggle {
+      height: 40px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-2); color: var(--fg);
+      transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+    }
+    .home-link { display: inline-flex; align-items: center; gap: 8px; padding: 0 15px; font-family: var(--mono); font-size: .78rem; font-weight: 500; text-decoration: none; }
+    .toggle { width: 40px; cursor: pointer; display: grid; place-items: center; }
+    .home-link:hover, .toggle:hover { border-color: var(--accent); color: var(--accent-ink); transform: translateY(-1px); }
+    .toggle svg { width: 18px; height: 18px; }
+    .toggle .sun { display: none; }
+    [data-theme="light"] .toggle .sun { display: block; }
+    [data-theme="light"] .toggle .moon { display: none; }
+
+    .container { position: relative; z-index: 2; max-width: 1080px; margin: 0 auto; padding: 11vh 24px 56px; }
+    .header { margin-bottom: 8px; }
+    .eyebrow { font-family: var(--mono); color: var(--muted); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 10px; }
+    .header h1 { font-family: var(--serif); font-size: clamp(2.4rem, 6.5vw, 4.2rem); font-weight: 600; color: var(--fg); letter-spacing: -.02em; line-height: 1.02; }
+    .header h1 span { color: var(--accent-ink); }
+    .tagline { max-width: 44rem; margin-top: 18px; color: var(--fg); font-family: var(--serif); font-size: clamp(1.05rem, 2vw, 1.3rem); font-style: italic; }
+    .tagline strong { color: var(--accent-ink); font-style: normal; font-weight: 600; }
+
+    .stat-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+    .kv { font-family: var(--mono); font-size: .74rem; color: var(--muted); background: var(--bg-2); border: 1px solid var(--line); border-radius: 999px; padding: 6px 13px; display: inline-flex; align-items: center; gap: 7px; }
+    .kv b { color: var(--fg); font-weight: 600; }
+    .ldot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+    .ldot.live { animation: pulse 1.8s infinite; }
+    .ldot.err { background: var(--red); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+    /* Key Input Checker styling */
+    .key-input-card { background: var(--bg-2); border: 1px dashed var(--line); border-radius: 16px; padding: 18px 22px; margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+    .key-input-card label { font-family: var(--mono); font-size: 0.76rem; text-transform: uppercase; color: var(--muted); }
+    .checker-row { display: flex; gap: 12px; }
+    .checker-row input { flex: 1; height: 44px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); padding: 0 14px; font-family: var(--mono); font-size: 0.88rem; outline: none; }
+    .checker-row input:focus { border-color: var(--accent); }
+    .checker-btn { height: 44px; padding: 0 20px; border-radius: 8px; border: none; background: var(--accent); color: #fff; font-family: var(--mono); font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.18s; }
+    .checker-btn:hover { background: var(--accent-ink); }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 30px; }
+    @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+    .card { background: var(--bg-2); border: 1px solid var(--line); border-radius: 16px; padding: 22px 22px 20px; }
+    .card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+    .card-title { font-family: var(--mono); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 500; display: flex; align-items: center; gap: 7px; }
+    .card-title::before { content: ""; width: 3px; height: 11px; border-radius: 2px; background: var(--accent); }
+    .card-sub { font-family: var(--mono); font-size: .68rem; color: var(--muted-2); }
+    .big { font-family: var(--serif); font-size: clamp(2.6rem, 6vw, 3.6rem); font-weight: 600; color: var(--fg); letter-spacing: -.02em; line-height: 1; margin: 10px 0 4px; }
+    .big .unit { font-size: .42em; color: var(--muted); font-weight: 500; margin-left: 3px; }
+    .frac { font-family: var(--mono); font-size: .76rem; color: var(--muted); margin-bottom: 16px; }
+    .frac b { color: var(--fg); font-weight: 600; }
+    .track { height: 9px; background: var(--bg-3); border-radius: 999px; overflow: hidden; }
+    .fill { height: 100%; border-radius: 999px; background: var(--green); transition: width .8s cubic-bezier(.4,0,.2,1); width: 0%; }
+    .fill.mcp { background: var(--accent); }
+    .fill.warn { background: var(--amber); }
+    .fill.full { background: var(--red); }
+    .reset { font-family: var(--mono); font-size: .72rem; color: var(--muted); margin-top: 13px; display: flex; align-items: center; gap: 6px; }
+    .reset b { color: var(--fg); font-variant-numeric: tabular-nums; font-weight: 600; }
+
+    .section { background: var(--bg-2); border: 1px solid var(--line); border-radius: 16px; padding: 22px; margin-top: 18px; }
+    .section-title { font-family: var(--mono); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    .section-title::before { display: none; }
+    .section-title > span:first-child { display: flex; align-items: center; gap: 7px; }
+    .section-title > span:first-child::before { content: ""; width: 3px; height: 11px; border-radius: 2px; background: var(--accent); }
+    .section-sub { font-family: var(--mono); font-size: .7rem; color: var(--muted-2); margin-bottom: 18px; }
+    .legend { font-family: var(--mono); font-size: .66rem; color: var(--muted-2); }
+
+    .usage-head { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin: 14px 0 18px; }
+    .total-label { font-family: var(--mono); font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+    .total-value { font-family: var(--serif); font-size: clamp(2rem, 5vw, 3rem); line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .range-tabs { display: flex; gap: 4px; padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-3); }
+    .range-btn { min-height: 36px; padding: 0 12px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); font-family: var(--mono); font-size: .68rem; cursor: pointer; }
+    .range-btn:hover { color: var(--fg); }
+    .range-btn.active { background: var(--bg-2); color: var(--fg); box-shadow: 0 1px 4px rgba(28,27,23,.08); }
+    .trend-wrap { position: relative; height: 300px; }
+    #trend { width: 100%; height: 100%; display: block; }
+    .system-wrap { position: relative; height: 280px; margin-top: 16px; }
+    #systemChart { width: 100%; height: 100%; display: block; }
+    .info-icon {
+      width: 17px; height: 17px; display: inline-grid; place-items: center; border: 1px solid var(--muted-2);
+      border-radius: 50%; color: var(--muted); font-family: var(--sans); font-size: 11px; font-weight: 600;
+      line-height: 1; text-transform: none; cursor: help;
+    }
+
+    .model { margin-bottom: 15px; }
+    .model:last-child { margin-bottom: 0; }
+    .model-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; font-family: var(--mono); font-size: .76rem; }
+    .model-name { color: var(--fg); font-weight: 600; }
+    .model-val { color: var(--muted); font-variant-numeric: tabular-nums; }
+    .model-val b { color: var(--fg); }
+    .track.sm { height: 6px; }
+    .empty { color: var(--muted-2); font-family: var(--mono); font-size: .76rem; padding: 18px 0; text-align: center; }
+
+    .footer { text-align: center; font-family: var(--mono); font-size: 11px; color: var(--muted-2); padding-top: 28px; margin-top: 32px; border-top: 1px solid var(--line); line-height: 1.9; }
+    .footer a { color: var(--accent); text-decoration: none; opacity: .7; }
+    .footer a:hover { opacity: 1; }
+
+    .reveal { opacity: 0; transform: translateY(14px); animation: rise .7s cubic-bezier(.2,.7,.2,1) forwards; }
+    .d1 { animation-delay: .05s; } .d2 { animation-delay: .13s; } .d3 { animation-delay: .21s; }
+    @keyframes rise { to { opacity: 1; transform: none; } }
+    @media (max-width: 720px) {
+      .container { padding: 12vh 16px 44px; }
+      .topbar { top: 14px; right: 14px; }
+      .section-title { flex-direction: column; align-items: flex-start; gap: 5px; }
+      .usage-head { align-items: flex-start; flex-direction: column; }
+      .range-tabs { width: 100%; }
+      .range-btn { flex: 1; padding: 0 8px; }
+      .trend-wrap { height: 240px; }
+      .system-wrap { height: 240px; margin-top: 10px; }
+    }
+    .home-link { position: fixed; top: 20px; left: 22px; z-index: 5; display: inline-flex; align-items: center; gap: 7px; height: 40px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-2); padding: 0 15px; font-family: var(--mono); font-size: .78rem; text-decoration: none; }
+    .home-link:hover { border-color: var(--accent); color: var(--accent-ink); }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <a class="home-link" href="/" aria-label="หน้าแรก" title="หน้าแรก">← Store</a>
+    <button class="toggle" id="themeToggle" aria-label="Toggle color theme" title="Toggle theme">
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" /></svg>
+    </button>
+  </div>
+
+  <div class="container">
+
+    <div class="header reveal d1">
+      <div class="eyebrow">GLM Coding Plan · z.ai quota</div>
+      <h1>Usage <span>Monitor</span></h1>
+      <p class="tagline">
+        ติดตาม <strong>quota ของ GLM Coding Plan</strong> แบบเรียลไทม์ — โควตา 5 ชั่วโมง, Web Search / Reader / Zread รายเดือน และเวลารอบถัดไป
+      </p>
+      
+      <!-- Key input box -->
+      <div class="key-input-card">
+        <label for="keyCheckerInput">ป้อนคีย์ Z.ai ที่ซื้อเพื่อสแกนสถานะ</label>
+        <div class="checker-row">
+          <input type="text" id="keyCheckerInput" placeholder="กรอก z-ai-key-..." value="z-ai-key-neural-edge-seed1-8842" />
+          <button class="checker-btn" id="queryBtn">สแกนสถานะ</button>
+        </div>
+      </div>
+
+      <div class="stat-row" style="margin-top:25px;">
+        <span class="kv">plan: <b id="planLevel">—</b></span>
+        <span class="kv"><span class="ldot live" id="liveDot"></span><span id="liveText">live</span></span>
+        <span class="kv">อัปเดต: <b id="updatedAt">—</b></span>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card reveal d2">
+        <div class="card-head">
+          <span class="card-title">5 Hours Quota</span>
+          <span class="card-sub">โควตาการใช้งานหลัก</span>
+        </div>
+        <div class="big"><span id="fivePct">—</span><span class="unit">%</span></div>
+        <div class="frac">เหลือโควตาใช้งาน <b id="fiveUsedPct">—</b>% ในรอบนี้</div>
+        <div class="track"><div class="fill" id="fiveFill"></div></div>
+        <div class="reset">รีเซ็ตใน <b id="fiveReset">—</b></div>
+      </div>
+
+      <div class="card reveal d2">
+        <div class="card-head">
+          <span class="card-title">Total Monthly Web Search / Reader / Zread Quota</span>
+          <span class="card-sub">โควตารวมรายเดือน</span>
+        </div>
+        <div class="big"><span id="monthlyPct">—</span><span class="unit">%</span></div>
+        <div class="frac"><b id="monthlyUsed">—</b> / <span id="monthlyTotal">—</span> ครั้ง · เหลือ <b id="monthlyRemain">—</b></div>
+        <div class="track"><div class="fill mcp" id="monthlyFill"></div></div>
+        <div class="reset">รีเซ็ต <b id="monthlyReset">—</b></div>
+      </div>
+    </div>
+
+    <div class="section reveal d3">
+      <div class="section-title">
+        <span>Usage Details</span>
+        <span class="legend" id="trendLegend">ข้อมูลจาก z.ai · ดีเลย์ประมาณ 10 นาที</span>
+      </div>
+      <div class="usage-head">
+        <div>
+          <div class="total-label">Total Tokens</div>
+          <div class="total-value" id="totalTokens">—</div>
+        </div>
+        <div class="range-tabs" aria-label="ช่วงเวลาของกราฟ">
+          <button class="range-btn" type="button" data-days="0">Today</button>
+          <button class="range-btn active" type="button" data-days="7">Last 7 Days</button>
+          <button class="range-btn" type="button" data-days="30">Last 30 Days</button>
+        </div>
+      </div>
+      <div class="trend-wrap"><canvas id="trend"></canvas></div>
+    </div>
+
+    <div class="section reveal d3">
+      <div class="section-title">
+        <span>System Status <span class="info-icon" title="ข้อมูลความเร็วย้อนหลัง 7 วัน">i</span></span>
+        <span class="legend" id="systemLegend">ความเร็วในการ Decode · 7 วันที่ผ่านมา</span>
+      </div>
+      <div class="system-wrap"><canvas id="systemChart"></canvas></div>
+    </div>
+
+    <div class="section reveal d3">
+      <div class="section-title">
+        <span>Monthly Tool Usage</span>
+        <span class="legend">ในรอบปัจจุบัน</span>
+      </div>
+      <div class="section-sub">แยกตามประเภทการเรียกใช้ Web Search, Reader และ Zread</div>
+      <div id="tools"><div class="empty">—</div></div>
+    </div>
+
+    <div class="footer">
+      ดึงข้อมูลและอัปเดตอัตโนมัติจากโฮสต์จำลอง Z.ai API Gateway · <span id="fetchTime">—</span>
+    </div>
+
+  </div>
+
+  <script>
+    const root = document.documentElement;
+    const $ = id => document.getElementById(id);
+    let state = { fiveHour: null, monthlyTools: null, level: null, modelUsage: null, systemStatus: null, rangeDays: 7 };
+
+    /* ---- theme ---- */
+    (function(){
+      root.setAttribute("data-theme", localStorage.getItem("glm-theme") || "light");
+    })();
+    $("themeToggle").addEventListener("click", () => {
+      const cur = root.getAttribute("data-theme") === "dark" ? "dark" : "light";
+      const next = cur === "light" ? "dark" : "light";
+      root.setAttribute("data-theme", next);
+      localStorage.setItem("glm-theme", next);
+      renderTrend();
+      renderSystemStatus();
+    });
+
+    /* ---- fetch data ---- */
+    async function queryData() {
+      const key = $("keyCheckerInput").value.trim();
+      if (!key) return;
+
+      try {
+        const r = await fetch(`/glm/api/usage?key=${encodeURIComponent(key)}`);
+        if (!r.ok) throw new Error("HTTP Status " + r.status);
+        const res = await r.json();
+        if (res.success) {
+          renderQuota(res.data);
+          setLive(true);
+        }
+      } catch (e) {
+        setLive(false);
+      }
+
+      try {
+        // Load charts data
+        const rModel = await fetch(`/glm/api/model-usage`);
+        const resModel = await rModel.json();
+        if (resModel.success) {
+          state.modelUsage = resModel.data;
+          const total = state.modelUsage.totalUsage.totalTokensUsage || 0;
+          $("totalTokens").textContent = total.toLocaleString("en-US");
+          renderTrend();
+        }
+      } catch (e) {}
+
+      try {
+        const rSys = await fetch(`/glm/api/system-status`);
+        const resSys = await rSys.json();
+        if (resSys.success) {
+          state.systemStatus = resSys.data;
+          renderSystemStatus();
+        }
+      } catch(e) {}
+    }
+
+    function setLive(ok) {
+      $("liveDot").classList.toggle("err", !ok);
+      $("liveDot").classList.toggle("live", ok);
+      $("liveText").textContent = ok ? "live" : "ล้มเหลว";
+    }
+
+    function renderQuota(data) {
+      $("planLevel").textContent = (data.level || "Premium").toUpperCase();
+      const limits = data.limits || [];
+      const fiveHour = limits.find(l => l.type === "TOKENS_LIMIT");
+      const monthlyTools = limits.find(l => l.type === "TIME_LIMIT");
+
+      if (fiveHour) {
+        const rem = Number(fiveHour.percentage) || 0;
+        $("fivePct").textContent = rem;
+        $("fiveUsedPct").textContent = rem;
+        const f = $("fiveFill");
+        f.style.width = rem + "%";
+        f.className = "fill " + (rem < 20 ? "full" : rem < 50 ? "warn" : "");
+        state.fiveHour = { pct: rem, reset: fiveHour.nextResetTime };
+      }
+
+      if (monthlyTools) {
+        const remPct = Number(monthlyTools.percentage) || 0;
+        $("monthlyPct").textContent = remPct;
+        $("monthlyUsed").textContent = monthlyTools.currentValue.toLocaleString();
+        $("monthlyTotal").textContent = monthlyTools.usage.toLocaleString();
+        $("monthlyRemain").textContent = monthlyTools.remaining.toLocaleString();
+        const f = $("monthlyFill");
+        f.style.width = remPct + "%";
+        f.className = "fill mcp " + (remPct < 20 ? "full" : remPct < 50 ? "warn" : "");
+        state.monthlyTools = { pct: remPct, reset: monthlyTools.nextResetTime };
+        renderTools(monthlyTools.usageDetails || [], monthlyTools.currentValue || 0);
+      }
+
+      const now = new Date().toLocaleTimeString("th-TH");
+      $("updatedAt").textContent = now;
+      $("fetchTime").textContent = now;
+    }
+
+    function renderTools(details, total) {
+      const box = $("tools");
+      if (!details.length) { box.innerHTML = '<div class="empty">ไม่มีรายงานเครื่องมือ</div>'; return; }
+      
+      const max = Math.max(1, ...details.map(d => d.usage));
+      const palette = ["var(--accent)", "var(--green)", "var(--blue)", "var(--rose)", "var(--gold)"];
+
+      box.innerHTML = details.map((d, i) => {
+        const share = total > 0 ? (d.usage / total * 100) : 0;
+        const w = (d.usage / max * 100);
+        return '<div class="model">' +
+          '<div class="model-row">' +
+            '<span class="model-name">' + d.modelCode + '</span>' +
+            '<span class="model-val"><b>' + d.usage.toLocaleString() + '</b> ครั้ง · ' + share.toFixed(0) + '%</span>' +
+          '</div>' +
+          '<div class="track sm"><div class="fill" style="width:' + w + '%; background:' + palette[i % palette.length] + ';"></div></div>' +
+        '</div>';
+      }).join("");
+    }
+
+    /* ---- Charts Rendering using Canvas ---- */
+    function renderTrend() {
+      const cv = $("trend"), ctx = cv.getContext("2d");
+      const usage = state.modelUsage;
+      if (!cv || !usage) return;
+
+      const dark = root.getAttribute("data-theme") === "dark";
+      const COL = { grid: dark ? "#36332b" : "#e0dccf", label: dark ? "#9c9587" : "#6f6b60", bar: dark ? "#e1875f" : "#cd6f4d" };
+
+      const dpr = window.devicePixelRatio || 1;
+      const W = cv.clientWidth, H = cv.clientHeight;
+      cv.width = W * dpr; cv.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+
+      const times = usage.x_time || [];
+      const tokens = usage.tokensUsage || [];
+      const len = times.length;
+      if (len === 0) return;
+
+      const pad = { l: 50, r: 10, t: 15, b: 35 };
+      const pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
+      const maxVal = Math.max(1, ...tokens);
+
+      // Grid lines
+      ctx.strokeStyle = COL.grid; ctx.fillStyle = COL.label; ctx.lineWidth = 1;
+      ctx.font = "9px 'JetBrains Mono', monospace"; ctx.textAlign = "right";
+      for (let i = 0; i <= 4; i++) {
+        const y = pad.t + ph - (i / 4) * ph;
+        const val = (maxVal * i / 4);
+        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+        ctx.fillText((val / 1000).toFixed(0) + "K", pad.l - 6, y + 3);
+      }
+
+      // Draw bars
+      const slot = pw / len;
+      const barW = Math.max(2, slot * 0.6);
+      ctx.fillStyle = COL.bar;
+      for (let i = 0; i < len; i++) {
+        const h = (tokens[i] / maxVal) * ph;
+        const x = pad.l + i * slot + (slot - barW) / 2;
+        ctx.fillRect(x, pad.t + ph - h, barW, h);
+      }
+
+      // X Axis Labels
+      ctx.textAlign = "center";
+      for (let i = 0; i < len; i += Math.ceil(len / 6)) {
+        const x = pad.l + i * slot + slot / 2;
+        const lbl = times[i].slice(5, 10);
+        ctx.fillText(lbl, x, pad.t + ph + 15);
+      }
+    }
+
+    function renderSystemStatus() {
+      const cv = $("systemChart"), ctx = cv.getContext("2d");
+      const sys = state.systemStatus;
+      if (!cv || !sys) return;
+
+      const dark = root.getAttribute("data-theme") === "dark";
+      const COL = {
+        grid: dark ? "#36332b" : "#e0dccf",
+        label: dark ? "#9c9587" : "#6f6b60",
+        pro: dark ? "#7ba6d4" : "#4f78a8",
+        lite: dark ? "#73c3d2" : "#3f9bae"
+      };
+
+      const dpr = window.devicePixelRatio || 1;
+      const W = cv.clientWidth, H = cv.clientHeight;
+      cv.width = W * dpr; cv.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+
+      const times = sys.x_time || [];
+      const pro = sys.proMaxDecodeSpeed || [];
+      const lite = sys.liteDecodeSpeed || [];
+      const len = times.length;
+      if (len === 0) return;
+
+      const pad = { l: 50, r: 10, t: 15, b: 35 };
+      const pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
+      const maxVal = Math.max(1, ...pro, ...lite);
+
+      ctx.strokeStyle = COL.grid; ctx.fillStyle = COL.label; ctx.lineWidth = 1;
+      ctx.font = "9px 'JetBrains Mono', monospace"; ctx.textAlign = "right";
+      for (let i = 0; i <= 4; i++) {
+        const y = pad.t + ph - (i / 4) * ph;
+        const val = (maxVal * i / 4);
+        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+        ctx.fillText(val.toFixed(0), pad.l - 6, y + 3);
+      }
+
+      function drawLine(arr, color) {
+        ctx.beginPath();
+        for (let i = 0; i < len; i++) {
+          const x = pad.l + (i / (len - 1)) * pw;
+          const y = pad.t + ph - (arr[i] / maxVal) * ph;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.stroke();
+      }
+
+      drawLine(pro, COL.pro);
+      drawLine(lite, COL.lite);
+
+      ctx.textAlign = "center";
+      for (let i = 0; i < len; i++) {
+        const x = pad.l + (i / (len - 1)) * pw;
+        ctx.fillText(times[i].slice(5), x, pad.t + ph + 15);
+      }
+    }
+
+    /* ---- countdown triggers ---- */
+    function tick() {
+      if (state.fiveHour && state.fiveHour.reset) {
+        $("fiveReset").textContent = countdown(state.fiveHour.reset);
+      }
+      if (state.monthlyTools && state.monthlyTools.reset) {
+        $("monthlyReset").textContent = new Date(state.monthlyTools.reset).toLocaleDateString("th-TH");
+      }
+    }
+
+    function countdown(targetMs) {
+      const diff = targetMs - Date.now();
+      if (diff <= 0) return "รอรีเซ็ต...";
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      return h + "ชม " + m + "น " + s + "วิ";
+    }
+
+    $("queryBtn").addEventListener("click", queryData);
+    queryData();
+    setInterval(queryData, 30000);
+    setInterval(tick, 1000);
+    window.addEventListener("resize", () => { renderTrend(); renderSystemStatus(); });
+  </script>
+</body>
+</html>

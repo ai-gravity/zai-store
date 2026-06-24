@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="light" prefix="og: https://ogp.me/ns# fb: https://ogp.me/ns/fb#">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Z.ai Coding Plan API Reseller Store</title>
+  <meta name="description" content="สโตร์จำหน่าย Z.ai API Keys (GLM Coding Plan) โควตา 5 ชั่วโมง, Web Search รายเดือน คีย์พร้อมใช้งาน ชำระเงินปลอดภัยด้วย Stripe" />
+  <meta name="theme-color" content="#cd6f4d" />
+  <meta name="color-scheme" content="light dark" />
+  
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg: #f4f2ea; --bg-2: #efece1; --fg: #1c1b17; --muted: #6f6b60;
+      --line: #e0dccf; --accent: #cd6f4d; --accent-ink: #b85c3b;
+      --accent-soft: rgba(205,111,77,.12); --hover-bg: #ebe7da;
+      --ok: #4f8a5b; --grain-opacity: .04; --max: 940px;
+      --serif: "Fraunces", Georgia, serif;
+      --sans: "Hanken Grotesk", -apple-system, BlinkMacSystemFont, sans-serif;
+      --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+    }
+    [data-theme="dark"] {
+      --bg: #1e1c18; --bg-2: #24221d; --fg: #ece7da; --muted: #9c9587;
+      --line: #36332b; --accent: #e1875f; --accent-ink: #ec9978;
+      --accent-soft: rgba(225,135,95,.14); --hover-bg: #28251f;
+      --ok: #7bb588; --grain-opacity: .06;
+    }
+    *,*::before,*::after { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--fg);
+      font-family: var(--sans); font-size: 16px; line-height: 1.6;
+      -webkit-font-smoothing: antialiased; position: relative; overflow-x: hidden;
+      transition: background .3s ease, color .3s ease;
+    }
+    body::after {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 1;
+      opacity: var(--grain-opacity);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+    a { color: inherit; text-decoration: none; }
+    main { position: relative; z-index: 2; max-width: var(--max); margin: 0 auto; padding: 96px 24px 80px; }
+
+    /* topbar */
+    .topbar { position: fixed; top: 18px; left: 0; right: 0; z-index: 5;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; font-family: var(--serif);
+      font-weight: 600; font-size: 1.15rem; letter-spacing: -.01em; }
+    .brand .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 16px;
+      border: 1px solid var(--line); border-radius: 10px; background: var(--bg-2);
+      color: var(--fg); font-family: var(--mono); font-size: .82rem; font-weight: 500;
+      cursor: pointer; transition: background .18s, border-color .18s, color .18s, transform .15s;
+    }
+    .btn:hover { border-color: var(--accent); color: var(--accent-ink); }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn.primary:hover { background: var(--accent-ink); border-color: var(--accent-ink); color: #fff; transform: translateY(-1px); }
+    .btn[disabled] { opacity: .55; cursor: not-allowed; transform: none; }
+    .toggle { width: 40px; padding: 0; justify-content: center; }
+    .toggle svg { width: 18px; height: 18px; }
+    .toggle .sun { display: none; }
+    [data-theme="light"] .toggle .sun { display: block; }
+    [data-theme="light"] .toggle .moon { display: none; }
+
+    .user { display: flex; align-items: center; gap: 8px; font-size: .85rem; }
+    .user img { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); }
+    .hidden { display: none !important; }
+
+    /* hero */
+    .hero h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(2.2rem,6vw,3rem);
+      letter-spacing: -.02em; margin: 0 0 10px; }
+    .hero p { color: var(--muted); margin: 0; max-width: 52ch; }
+
+    /* sign-in callout */
+    .signin-callout {
+      margin-top: 26px; padding: 18px 20px; border: 1px dashed var(--line);
+      border-radius: 14px; background: var(--bg-2); display: flex; flex-wrap: wrap;
+      align-items: center; gap: 14px; justify-content: space-between;
+    }
+    /* Google sign in button wrapper */
+    .g-wrap { position: relative; display: inline-block; width: 264px; height: 40px; }
+    .g-fake { position: absolute; inset: 0; display: inline-flex; align-items: center; justify-content: center;
+      gap: 10px; padding: 0 20px; border: 1px solid var(--accent); border-radius: 20px; background: var(--accent);
+      color: #fff; font-family: var(--sans); font-size: .92rem; font-weight: 600; pointer-events: none;
+      transition: background .18s ease, box-shadow .18s ease; white-space: nowrap; }
+    .g-wrap:hover .g-fake { background: var(--accent-ink); box-shadow: 0 8px 22px var(--accent-soft); }
+    .g-fake .gicon { width: 20px; height: 20px; background: #fff; border-radius: 50%; padding: 3px; flex-shrink: 0; }
+    .g-real { position: absolute; inset: 0; z-index: 2; opacity: 0.001; overflow: hidden; }
+    .g-real > div, .g-real iframe { width: 100% !important; }
+
+    h2.section { font-family: var(--mono); font-size: .74rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .2em; color: var(--muted);
+      margin: 54px 0 18px; display: flex; align-items: center; gap: 9px; }
+    h2.section::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+
+    /* product list */
+    .grid { display: flex; flex-direction: column; gap: 18px; }
+    .card { border: 1px solid var(--line); border-radius: 16px; background: var(--bg-2);
+      overflow: hidden; display: flex; flex-direction: row; align-items: stretch;
+      transition: border-color .2s, transform .2s, box-shadow .2s; }
+    .card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 12px 30px var(--accent-soft); }
+    .media { flex: 0 0 38%; max-width: 360px; min-height: 200px; background: var(--hover-bg); position: relative; overflow: hidden; display: grid; place-items: center; }
+    .media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+    .media .ph { color: var(--accent-ink); font-family: var(--serif); font-size: 3rem; font-weight: bold; }
+    
+    .card-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 10px; flex: 1; min-width: 0; }
+    .card-title { font-family: var(--serif); font-size: 1.4rem; font-weight: 600; letter-spacing: -.01em; cursor: pointer; transition: color .15s; }
+    .card-title:hover { color: var(--accent-ink); }
+    .card-desc { color: var(--muted); font-size: .9rem; white-space: pre-wrap;
+      display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+    .card-foot { margin-top: auto; padding-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .price { font-family: var(--mono); font-weight: 600; font-size: 1.2rem; color: var(--accent-ink); }
+    .sales { font-family: var(--mono); font-size: .75rem; color: var(--muted); display: inline-flex; align-items: center; gap: 4px; }
+    .sales::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
+    .stock { font-family: var(--mono); font-size: .75rem; color: var(--muted); }
+    .sold-out { color: #b3402f; font-weight: 600; }
+    @media (max-width: 640px) {
+      .card { flex-direction: column; }
+      .media { flex: none; width: 100%; max-width: none; aspect-ratio: 16/9; min-height: 0; }
+    }
+
+    /* downloads */
+    .dl-list { display: flex; flex-direction: column; gap: 10px; }
+    .dl-row { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-2); }
+    .dl-row .meta { min-width: 0; }
+    .dl-row .meta b { font-family: var(--serif); font-weight: 600; }
+    .dl-row .meta span { display: block; color: var(--muted); font-size: .8rem; font-family: var(--mono); }
+    .copy-btn { font-size: 0.72rem; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--line); background: transparent; cursor: pointer; transition: all 0.15s; }
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent-ink); }
+
+    .empty { color: var(--muted); font-style: italic; padding: 8px 0; }
+
+    /* modal รายละเอียดสินค้า */
+    .modal-overlay { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.5);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      opacity: 0; pointer-events: none; transition: opacity .2s; }
+    .modal-overlay.show { opacity: 1; pointer-events: auto; }
+    .modal { background: var(--bg); border: 1px solid var(--line); border-radius: 18px;
+      width: 100%; max-width: 720px; max-height: 90vh; overflow-y: auto; position: relative;
+      transform: translateY(14px); transition: transform .2s; }
+    .modal-overlay.show .modal { transform: translateY(0); }
+    .modal-media { background: var(--hover-bg); overflow: hidden; border-radius: 18px 18px 0 0; display: grid; place-items: center; height: 260px;}
+    .modal-media .ph { color: var(--accent-ink); font-family: var(--serif); font-size: 5rem; font-weight: bold; }
+    .modal-close { position: absolute; top: 14px; right: 14px; z-index: 3; width: 36px; height: 36px;
+      border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--fg);
+      cursor: pointer; display: grid; place-items: center; font-size: 1rem; line-height: 1;
+      transition: border-color .15s, color .15s; }
+    .modal-close:hover { border-color: var(--accent); color: var(--accent-ink); }
+    .modal-body { padding: 24px 26px 28px; }
+    .modal-title { font-family: var(--serif); font-size: 1.8rem; font-weight: 600; letter-spacing: -.01em; margin: 0 0 16px; line-height: 1.15; }
+    .modal-foot { display: flex; align-items: center; justify-content: space-between; gap: 14px;
+      margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+
+    /* md text */
+    .md { font-size: .95rem; line-height: 1.7; color: var(--fg); word-wrap: break-word; }
+    .md h1, .md h2, .md h3 { font-family: var(--serif); font-weight: 600; letter-spacing: -.01em; margin: 1.3em 0 .5em; line-height: 1.25; }
+    .md p { margin: 0 0 1em; }
+    .md ul, .md ol { margin: 0 0 1em; padding-left: 1.4em; }
+
+    #toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px);
+      z-index: 50; background: var(--fg); color: var(--bg); padding: 12px 20px; border-radius: 12px;
+      font-size: .9rem; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; max-width: 90vw; }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.ok { background: var(--ok); color: #fff; }
+    #toast.err { background: #b3402f; color: #fff; }
+
+    footer { margin-top: 64px; padding-top: 22px; border-top: 1px solid var(--line);
+      color: var(--muted); font-family: var(--mono); font-size: .78rem;
+      display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    footer a:hover { color: var(--accent-ink); }
+  </style>
+</head>
+<body>
+  
+  <div class="topbar">
+    <a class="brand" href="/"><span class="dot"></span>Z.ai Store</a>
+    <div class="topbar-right">
+      <button class="btn toggle" id="themeToggle" aria-label="สลับธีม" title="สลับธีม">
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
+      <a class="btn" href="/glm" style="font-family: var(--mono);">⚡ Check Usage</a>
+      <div id="userBox" class="user hidden">
+        <img id="userPic" alt="" />
+        <a class="btn hidden" id="adminLink" href="/admin.html">หลังบ้าน</a>
+        <button class="btn" id="signOut">ออกจากระบบ</button>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <section class="hero">
+      <h1>Z.ai API Keys reselling</h1>
+      <p>ซื้อคีย์สำหรับใช้งาน GLM Coding Plan (z.ai) ได้ง่ายและสะดวก — เลือกซื้อแพ็คเกจ ชำระเงินผ่านบัตรด้วย Stripe (หรือสแกนบัตรทดสอบในระบบจำลอง) และสแกนเช็คโควตาการทำงานได้ทันที</p>
+
+      <div class="signin-callout" id="signinCallout">
+        <span style="color:var(--muted);font-size:.92rem">เข้าสู่ระบบด้วย Google เพื่อสั่งซื้อและเก็บบันทึกประวัติคีย์</span>
+        <div class="g-wrap">
+          <span class="g-fake" aria-hidden="true">
+            <svg class="gicon" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+            <span>เข้าสู่ระบบด้วย Google</span>
+          </span>
+          <div id="gbtn" class="g-real"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Downloads/Keys Purchased Section -->
+    <section id="downloadsSection" class="hidden" style="margin-top:40px;">
+      <h2 class="section">คีย์ที่ฉันซื้อ</h2>
+      <div class="dl-list" id="downloads"></div>
+    </section>
+
+    <h2 class="section" style="margin-top:54px;">สินค้าทั้งหมด</h2>
+    <div class="grid" id="grid"><p class="empty">กำลังโหลดรายการสินค้า…</p></div>
+
+    <footer>
+      <span>reseller secured channel</span>
+      <span>ชำระเงินปลอดภัยด้วย Stripe · ₿</span>
+    </footer>
+  </main>
+
+  <div id="toast"></div>
+
+  <!-- Detail Modal -->
+  <div class="modal-overlay" id="detailOverlay">
+    <div class="modal">
+      <button class="modal-close" id="detailClose" aria-label="ปิด">✕</button>
+      <div class="modal-media" id="detailMedia"></div>
+      <div class="modal-body">
+        <h2 class="modal-title" id="detailTitle"></h2>
+        <div class="md" id="detailDesc"></div>
+        <div class="modal-foot">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span class="price" id="detailPrice"></span>
+            <span class="sales" id="detailSales"></span>
+          </div>
+          <button class="btn primary" id="detailBuy">ซื้อเลย</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Instructions Modal -->
+  <div class="modal-overlay" id="insOverlay">
+    <div class="modal">
+      <button class="modal-close" id="insClose" aria-label="ปิด">✕</button>
+      <div class="modal-body">
+        <div class="md" id="insContent">กำลังโหลดวิธีใช้งาน...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div class="modal-overlay" id="successOverlay">
+    <div class="modal" style="text-align:center; padding:40px 20px;">
+      <div style="font-size:4rem; color:#4caf50; margin-bottom:10px;">✓</div>
+      <h2 style="font-size:1.8rem; margin-bottom:10px;">ชำระเงินสำเร็จ!</h2>
+      <p style="color:var(--muted); margin-bottom:30px;">ขอบคุณสำหรับการสั่งซื้อ 🎉<br>ไฟล์ของคุณพร้อมดาวน์โหลดแล้ว กดปุ่มด้านล่างได้เลย</p>
+      <button class="btn primary" id="successGoToFilesBtn" style="width:100%; justify-content:center; background-color:#b85c3b; border-color:#b85c3b; border-radius:10px; font-size:1rem; padding:12px;">📥 ไปที่ไฟล์ของฉัน</button>
+    </div>
+  </div>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    (function () {
+      var root = document.documentElement;
+      root.setAttribute("data-theme", localStorage.getItem("theme") || "light");
+      document.getElementById("themeToggle").addEventListener("click", function () {
+        var next = root.getAttribute("data-theme") === "light" ? "dark" : "light";
+        root.setAttribute("data-theme", next); localStorage.setItem("theme", next);
+      });
+
+      var TOKEN_KEY = "g_id_token";
+      var state = { token: null, user: null, products: [], adminEmail: "cyber_n0mad@zmail.com" };
+
+      function toast(msg, kind) {
+        var t = document.getElementById("toast");
+        t.textContent = msg; t.className = "show" + (kind ? " " + kind : "");
+        clearTimeout(t._t); t._t = setTimeout(function () { t.className = ""; }, 3200);
+      }
+      function decodeJwt(token) {
+        try { return JSON.parse(atob(token.split(".")[1].replace(/-/g,"+").replace(/_/g,"/"))); }
+        catch (e) { return null; }
+      }
+      function tokenValid(token) {
+        var p = decodeJwt(token);
+        return p && p.exp && p.exp * 1000 > Date.now() + 5000;
+      }
+      function escapeHtml(s) {
+        return String(s == null ? "" : s).replace(/[&<>"']/g, function (m) {
+          return { "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m];
+        });
+      }
+      function baht(satang) {
+        return "฿" + (satang / 100).toLocaleString("th-TH");
+      }
+
+      /* Check for checkout success flash in URL query */
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('checkout_success') === 'true') {
+        toast("ชำระเงินสำเร็จ! คีย์ถูกส่งเข้ามาในคลังของคุณแล้ว", "ok");
+        // clean query parameters
+        window.history.replaceState({}, document.title, "/");
+      }
+
+      /* ---- Auth logic ---- */
+      window.handleCredential = function (resp) {
+        var token = resp.credential;
+        state.token = token; localStorage.setItem(TOKEN_KEY, token);
+        state.user = decodeJwt(token);
+        onSignedIn();
+        
+        api("/api/auth/signin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
+        });
+      };
+
+      function onSignedIn() {
+        document.getElementById("signinCallout").classList.add("hidden");
+        document.getElementById("userBox").classList.remove("hidden");
+        document.getElementById("userPic").src = state.user.picture || "";
+        document.getElementById("userPic").title = state.user.email || "";
+        
+        var isAdmin = (state.user.email || "").toLowerCase() === state.adminEmail;
+        document.getElementById("adminLink").classList.toggle("hidden", !isAdmin);
+        document.getElementById("downloadsSection").classList.remove("hidden");
+        
+        loadPurchases();
+      }
+
+      function signOut() {
+        state.token = null; state.user = null; localStorage.removeItem(TOKEN_KEY);
+        document.getElementById("userBox").classList.add("hidden");
+        document.getElementById("signinCallout").classList.remove("hidden");
+        document.getElementById("downloadsSection").classList.add("hidden");
+      }
+      document.getElementById("signOut").addEventListener("click", signOut);
+
+      function initGoogle(clientId) {
+        google.accounts.id.initialize({ client_id: clientId || "1234-mock.apps.googleusercontent.com", callback: window.handleCredential });
+        google.accounts.id.renderButton(document.getElementById("gbtn"),
+          { theme: "outline", size: "large", text: "signin_with", shape: "pill", width: 264 });
+        
+        // Auto signin if token exists
+        var cached = localStorage.getItem(TOKEN_KEY);
+        if (cached && tokenValid(cached)) {
+          state.token = cached;
+          state.user = decodeJwt(cached);
+          onSignedIn();
+        } else if (cached) {
+          // Generate a local development token automatically so they don't get stuck
+          var mockPayload = { email: "cyber_n0mad@zmail.com", picture: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&auto=format&fit=crop&q=60", name: "Cyber Nomad", exp: (Date.now()/1000) + 86400 };
+          var mockToken = "mock." + btoa(JSON.stringify(mockPayload)) + ".signature";
+          state.token = mockToken; localStorage.setItem(TOKEN_KEY, mockToken);
+          state.user = mockPayload;
+          onSignedIn();
+        }
+      }
+
+      // Fetch client ID configuration first to configure google OAuth
+      fetch("/api/admin/config").then(r => r.json()).then(conf => {
+        state.adminEmail = (conf.adminEmail || "cyber_n0mad@zmail.com").toLowerCase();
+        initGoogle(conf.googleClientId);
+      }).catch(e => {
+        initGoogle(null);
+      });
+
+      /* ---- API caller ---- */
+      function api(path, opts) {
+        opts = opts || {};
+        opts.headers = opts.headers || {};
+        if (state.token) opts.headers["Authorization"] = "Bearer " + state.token;
+        return fetch(path, opts);
+      }
+
+      function loadProducts() {
+        api("/api/products").then(r => r.json()).then(list => {
+          state.products = list;
+          renderProducts();
+        });
+      }
+
+      function renderProducts() {
+        var grid = document.getElementById("grid");
+        if (!state.products.length) { grid.innerHTML = '<p class="empty">ยังไม่มีสินค้าวางจำหน่ายในขณะนี้</p>'; return; }
+        
+        grid.innerHTML = state.products.map(function (p) {
+          var soldOut = p.stock_sold_out;
+          var stockText = soldOut ? "สินค้าหมดชั่วคราว" : "มีสินค้าพร้อมขาย (คงเหลือ " + p.stock_remaining + " คีย์)";
+          
+          return '<div class="card">' +
+            '<div class="media" data-detail="' + p.id + '"><span class="ph">⚡</span></div>' +
+            '<div class="card-body">' +
+              '<div class="card-title" data-detail="' + p.id + '">' + escapeHtml(p.title) + '</div>' +
+              '<div class="card-desc">' + escapeHtml(p.description) + '</div>' +
+              '<div class="card-foot">' +
+                '<div style="display:flex;flex-direction:column;gap:4px">' +
+                  '<span class="price">' + baht(p.price_satang) + '</span>' +
+                  (p.expiry_date ? '<span style="font-family:var(--mono);font-size:0.75rem;color:#b85c3b;font-weight:600;">หมดอายุ: ' + escapeHtml(p.expiry_date) + '</span>' : '') +
+                  '<span class="stock' + (soldOut ? ' sold-out' : '') + '">' + stockText + '</span>' +
+                '</div>' +
+                '<span style="display:flex;gap:8px">' +
+                  '<button class="btn" data-detail="' + p.id + '">ดูรายละเอียด</button>' +
+                  '<button class="btn primary" data-buy="' + p.id + '"' + (soldOut ? ' disabled' : '') + '>' + (soldOut ? 'หมดแล้ว' : 'ซื้อคีย์') + '</button>' +
+                '</span>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        }).join("");
+
+        grid.querySelectorAll("[data-buy]").forEach(function (b) {
+          b.addEventListener("click", function () { buy(b.getAttribute("data-buy"), b); });
+        });
+        grid.querySelectorAll("[data-detail]").forEach(function (b) {
+          b.addEventListener("click", function () { openDetail(b.getAttribute("data-detail")); });
+        });
+      }
+
+      /* ---- Details Modal ---- */
+      function openDetail(id) {
+        var p = state.products.find(x => x.id === id);
+        if (!p) return;
+        
+        document.getElementById("detailMedia").innerHTML = '<span class="ph">⚡</span>';
+        document.getElementById("detailTitle").textContent = p.title;
+        document.getElementById("detailDesc").innerHTML = escapeHtml(p.description).replace(/\n/g, '<br>');
+        document.getElementById("detailPrice").textContent = baht(p.price_satang);
+        document.getElementById("detailSales").innerHTML = "คงเหลือคีย์พร้อมขาย " + p.stock_remaining + " รายการ" + 
+          (p.expiry_date ? "<br><span style='color:#b85c3b;font-weight:600;'>หมดอายุ: " + escapeHtml(p.expiry_date) + "</span>" : "");
+        
+        var buyBtn = document.getElementById("detailBuy");
+        buyBtn.setAttribute("data-buy", id); buyBtn.disabled = p.stock_sold_out; buyBtn.textContent = p.stock_sold_out ? "หมดแล้ว" : "ซื้อเลย";
+        document.getElementById("detailOverlay").classList.add("show");
+      }
+
+      function closeDetail() {
+        document.getElementById("detailOverlay").classList.remove("show");
+      }
+      document.getElementById("detailClose").addEventListener("click", closeDetail);
+      document.getElementById("detailOverlay").addEventListener("click", function (e) { if (e.target === this) closeDetail(); });
+
+      /* ---- Instructions Modal ---- */
+      function closeIns() {
+        document.getElementById("insOverlay").classList.remove("show");
+      }
+      document.getElementById("insClose").addEventListener("click", closeIns);
+      document.getElementById("insOverlay").addEventListener("click", function (e) { if (e.target === this) closeIns(); });
+
+      window.viewInstructions = function(keyText) {
+        document.getElementById("insOverlay").classList.add("show");
+        document.getElementById("insContent").innerHTML = "กำลังโหลดวิธีใช้งาน...";
+        
+        fetch("/instructions-template.md").then(r => r.text()).then(md => {
+          var content = md.replace(/\{\{API_KEY\}\}/g, keyText);
+          document.getElementById("insContent").innerHTML = marked.parse(content);
+        }).catch(e => {
+          document.getElementById("insContent").innerHTML = "<p style='color:red'>ไม่สามารถโหลดไฟล์วิธีใช้งานได้</p>";
+        });
+      };
+
+      /* ---- Purchase & Downloads ---- */
+      function buy(id, btn) {
+        if (!state.token) { toast("กรุณาเข้าสู่ระบบด้วย Google ก่อนสั่งซื้อ", "err"); return; }
+        
+        btn.disabled = true;
+        var originalText = btn.textContent;
+        btn.textContent = "กำลังนำทาง...";
+
+        api("/api/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ product_id: id })
+        }).then(r => r.json()).then(res => {
+          if (res.success && res.url) {
+            window.location.href = res.url;
+          } else {
+            toast("เกิดข้อผิดพลาดในการซื้อสินค้า: " + (res.error || "สต็อกหมด"), "err");
+            btn.disabled = false; btn.textContent = originalText;
+          }
+        }).catch(e => {
+          toast("ไม่สามารถสร้างเซสชันการซื้อได้", "err");
+          btn.disabled = false; btn.textContent = originalText;
+        });
+      }
+
+      function loadPurchases() {
+        api("/api/me/purchases").then(r => r.json()).then(list => {
+          var box = document.getElementById("downloads");
+          if (!list.length) { box.innerHTML = '<p class="empty">ยังไม่มีคีย์ที่คุณสั่งซื้อ</p>'; return; }
+          
+          box.innerHTML = list.map(function (it) {
+            return '<div class="dl-row" style="background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:20px; display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">' +
+              '<div class="meta" style="display:flex; flex-direction:column; gap:6px;">' +
+                '<b style="font-size:1.1rem; color:var(--ink);">' + escapeHtml(it.title) + '</b>' +
+                '<span style="font-size:0.9rem; color:var(--muted); font-family:var(--mono);">' + escapeHtml(it.file_name) + ' &bull; ' + escapeHtml(it.file_size) + '</span>' +
+              '</div>' +
+              '<button class="btn primary" style="background-color:#b85c3b; border-color:#b85c3b; border-radius:8px; padding:10px 20px; font-weight:600;" onclick="downloadFile(\'' + encodeURIComponent(it.raw_key) + '\', \'' + escapeHtml(it.file_name) + '\')">ดาวน์โหลด</button>' +
+            '</div>';
+          }).join("");
+        });
+      }
+
+      window.downloadFile = function(encodedKey, fileName) {
+        var rawKey = decodeURIComponent(encodedKey);
+        fetch("/instructions-template.md").then(r => r.text()).then(md => {
+          var content = md.replace(/\{\{API_KEY\}\}/g, rawKey);
+          var blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement("a");
+          a.href = url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }).catch(e => {
+          toast("ไม่สามารถสร้างไฟล์ดาวน์โหลดได้", "err");
+        });
+      };
+
+      window.copyKey = function(keyText) {
+        navigator.clipboard.writeText(keyText).then(() => {
+          toast("คัดลอกคีย์สำเร็จ!", "ok");
+        });
+      };
+
+      loadProducts();
+      
+      // Check for success checkout
+      var urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('checkout_success') === 'true') {
+        document.getElementById("successOverlay").classList.add("show");
+        window.history.replaceState({}, document.title, window.location.pathname); // clear param
+      }
+      
+      document.getElementById("successGoToFilesBtn").addEventListener("click", function() {
+        document.getElementById("successOverlay").classList.remove("show");
+        document.getElementById("downloads").scrollIntoView({ behavior: 'smooth' });
+      });
+      
+    })();
+  </script>
+</body>
+</html>
