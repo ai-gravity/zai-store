@@ -213,7 +213,7 @@
 
     <!-- Downloads/Keys Purchased Section -->
     <section id="downloadsSection" class="hidden" style="margin-top:40px;">
-      <h2 class="section">คีย์ที่ฉันซื้อ</h2>
+      <h2 class="section">สินค้าที่ฉันซื้อ</h2>
       <div class="dl-list" id="downloads"></div>
     </section>
 
@@ -382,22 +382,27 @@
         
         grid.innerHTML = state.products.map(function (p) {
           var soldOut = p.stock_sold_out;
-          var stockText = soldOut ? "สินค้าหมดชั่วคราว" : "มีสินค้าพร้อมขาย (คงเหลือ " + p.stock_remaining + " คีย์)";
+          var stockText = soldOut ? "สินค้าหมด" : "คงเหลือ " + p.stock_remaining;
+          var mediaHtml = p.image_url 
+            ? '<img src="' + escapeHtml(p.image_url) + '" style="width:100%;height:100%;object-fit:cover;">' 
+            : '<span class="ph">⚡</span>';
+          var salesBadge = (p.sales_count > 0) ? '<span style="font-size:0.75rem; color:var(--success);">● ' + p.sales_count + ' ครั้งที่ขายแล้ว</span>' : '';
           
           return '<div class="card">' +
-            '<div class="media" data-detail="' + p.id + '"><span class="ph">⚡</span></div>' +
+            '<div class="media" data-detail="' + p.id + '">' + mediaHtml + '</div>' +
             '<div class="card-body">' +
               '<div class="card-title" data-detail="' + p.id + '">' + escapeHtml(p.title) + '</div>' +
               '<div class="card-desc">' + escapeHtml(p.description) + '</div>' +
               '<div class="card-foot">' +
                 '<div style="display:flex;flex-direction:column;gap:4px">' +
                   '<span class="price">' + baht(p.price_satang) + '</span>' +
-                  (p.expiry_date ? '<span style="font-family:var(--mono);font-size:0.75rem;color:#b85c3b;font-weight:600;">หมดอายุ: ' + escapeHtml(p.expiry_date) + '</span>' : '') +
+                  salesBadge +
+                  (p.expiry_date ? '<span style="font-family:var(--mono);font-size:0.75rem;color:#b85c3b;font-weight:600;">EXP ' + escapeHtml(p.expiry_date) + '</span>' : '') +
                   '<span class="stock' + (soldOut ? ' sold-out' : '') + '">' + stockText + '</span>' +
                 '</div>' +
                 '<span style="display:flex;gap:8px">' +
-                  '<button class="btn" data-detail="' + p.id + '">ดูรายละเอียด</button>' +
-                  '<button class="btn primary" data-buy="' + p.id + '"' + (soldOut ? ' disabled' : '') + '>' + (soldOut ? 'หมดแล้ว' : 'ซื้อคีย์') + '</button>' +
+                  '<button class="btn" data-detail="' + p.id + '">รายละเอียด</button>' +
+                  '<button class="btn primary" data-buy="' + p.id + '"' + (soldOut ? ' disabled' : '') + '>' + (soldOut ? 'หมดแล้ว' : 'สั่งซื้อ') + '</button>' +
                 '</span>' +
               '</div>' +
             '</div>' +
@@ -417,15 +422,16 @@
         var p = state.products.find(x => x.id === id);
         if (!p) return;
         
-        document.getElementById("detailMedia").innerHTML = '<span class="ph">⚡</span>';
+        document.getElementById("detailMedia").innerHTML = p.image_url ? '<img src="'+escapeHtml(p.image_url)+'" style="width:100%;height:100%;object-fit:cover;">' : '<span class="ph">⚡</span>';
         document.getElementById("detailTitle").textContent = p.title;
         document.getElementById("detailDesc").innerHTML = escapeHtml(p.description).replace(/\n/g, '<br>');
         document.getElementById("detailPrice").textContent = baht(p.price_satang);
-        document.getElementById("detailSales").innerHTML = "คงเหลือคีย์พร้อมขาย " + p.stock_remaining + " รายการ" + 
-          (p.expiry_date ? "<br><span style='color:#b85c3b;font-weight:600;'>หมดอายุ: " + escapeHtml(p.expiry_date) + "</span>" : "");
+        document.getElementById("detailSales").innerHTML = "คงเหลือ " + p.stock_remaining + " รายการ <br>" + 
+          ((p.sales_count > 0) ? "<span style='color:var(--success);font-size:0.9rem;'>● " + p.sales_count + " ครั้งที่ขายแล้ว</span><br>" : "") +
+          (p.expiry_date ? "<span style='color:#b85c3b;font-weight:600;'>EXP: " + escapeHtml(p.expiry_date) + "</span>" : "");
         
         var buyBtn = document.getElementById("detailBuy");
-        buyBtn.setAttribute("data-buy", id); buyBtn.disabled = p.stock_sold_out; buyBtn.textContent = p.stock_sold_out ? "หมดแล้ว" : "ซื้อเลย";
+        buyBtn.setAttribute("data-buy", id); buyBtn.disabled = p.stock_sold_out; buyBtn.textContent = p.stock_sold_out ? "หมดแล้ว" : "สั่งซื้อ";
         document.getElementById("detailOverlay").classList.add("show");
       }
 
@@ -436,24 +442,8 @@
       document.getElementById("detailOverlay").addEventListener("click", function (e) { if (e.target === this) closeDetail(); });
 
       /* ---- Instructions Modal ---- */
-      function closeIns() {
-        document.getElementById("insOverlay").classList.remove("show");
-      }
-      document.getElementById("insClose").addEventListener("click", closeIns);
-      document.getElementById("insOverlay").addEventListener("click", function (e) { if (e.target === this) closeIns(); });
-
-      window.viewInstructions = function(keyText) {
-        document.getElementById("insOverlay").classList.add("show");
-        document.getElementById("insContent").innerHTML = "กำลังโหลดวิธีใช้งาน...";
-        
-        fetch("/instructions-template.md").then(r => r.text()).then(md => {
-          var content = md.replace(/\{\{API_KEY\}\}/g, keyText);
-          document.getElementById("insContent").innerHTML = marked.parse(content);
-        }).catch(e => {
-          document.getElementById("insContent").innerHTML = "<p style='color:red'>ไม่สามารถโหลดไฟล์วิธีใช้งานได้</p>";
-        });
-      };
-
+      
+      
       /* ---- Purchase & Downloads ---- */
       function buy(id, btn) {
         if (!state.token) { toast("กรุณาเข้าสู่ระบบด้วย Google ก่อนสั่งซื้อ", "err"); return; }
@@ -490,28 +480,28 @@
                 '<b style="font-size:1.1rem; color:var(--ink);">' + escapeHtml(it.title) + '</b>' +
                 '<span style="font-size:0.9rem; color:var(--muted); font-family:var(--mono);">' + escapeHtml(it.file_name) + ' &bull; ' + escapeHtml(it.file_size) + '</span>' +
               '</div>' +
-              '<button class="btn primary" style="background-color:#b85c3b; border-color:#b85c3b; border-radius:8px; padding:10px 20px; font-weight:600;" onclick="downloadFile(\'' + encodeURIComponent(it.raw_key) + '\', \'' + escapeHtml(it.file_name) + '\')">ดาวน์โหลด</button>' +
+              '<button class="btn primary" style="background-color:#b85c3b; border-color:#b85c3b; border-radius:8px; padding:10px 20px; font-weight:600;" onclick="downloadContent(\'' + encodeURIComponent(it.raw_key) + '\', \'' + escapeHtml(it.file_name) + '\')">ดาวน์โหลด</button>' +
             '</div>';
           }).join("");
         });
       }
 
-      window.downloadFile = function(encodedKey, fileName) {
-        var rawKey = decodeURIComponent(encodedKey);
-        fetch("/instructions-template.md").then(r => r.text()).then(md => {
-          var content = md.replace(/\{\{API_KEY\}\}/g, rawKey);
-          var blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
-          var url = URL.createObjectURL(blob);
-          var a = document.createElement("a");
-          a.href = url;
-          a.download = fileName;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        }).catch(e => {
-          toast("ไม่สามารถสร้างไฟล์ดาวน์โหลดได้", "err");
-        });
+      
+      
+      window.downloadContent = function(encodedContent, title) {
+        var content = decodeURIComponent(encodedContent);
+        if (!content || content.trim() === 'ไม่มีข้อมูลไฟล์') {
+           toast("ไม่มีเนื้อหาไฟล์", "err"); return;
+        }
+        var blob = new Blob([content], { type: 'text/markdown' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = (title.replace(/\s+/g, '_') || 'file') + '.md';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       };
 
       window.copyKey = function(keyText) {

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ html>
 <html lang="th" data-theme="light">
 <head>
   <meta charset="UTF-8" />
@@ -183,13 +183,25 @@
             <label for="newProdPrice">ราคา (หน่วยเป็นสตางค์ เช่น 100 บาท = 10000)</label>
             <input type="number" id="newProdPrice" placeholder="10000" required />
           </div>
+          <div class="form-group" style="grid-column: span 2;">
+            <label for="newProdImage">URL รูปภาพปกสินค้า (Image URL)</label>
+            <input type="url" id="newProdImage" placeholder="https://example.com/image.png" />
+          </div>
           <div class="form-group">
             <label for="newProdExpiry">วันหมดอายุของแพ็คเกจนี้ (Expiry Date)</label>
             <input type="text" id="newProdExpiry" placeholder="เช่น 31 ธันวาคม 2026 (เว้นว่างได้)" />
           </div>
+          <div class="form-group">
+            <label for="newProdStock">จำนวนจำกัด (Stock Limit)</label>
+            <input type="number" id="newProdStock" placeholder="10" required />
+          </div>
           <div class="form-group" style="grid-column: span 2;">
             <label for="newProdDesc">รายละเอียดสินค้า (Description)</label>
             <textarea id="newProdDesc" placeholder="อธิบายรายละเอียดแพ็คเกจ..."></textarea>
+          </div>
+          <div class="form-group" style="grid-column: span 2;">
+            <label for="newProdDelivery">เนื้อหาไฟล์ (Markdown) ที่จะส่งมอบให้ลูกค้า (ใส่ API Key ของจริงลงไปที่นี่)</label>
+            <textarea id="newProdDelivery" rows="6" placeholder="ใส่เนื้อหาไฟล์ .md ตรงนี้..."></textarea>
           </div>
           <div style="grid-column: span 2;">
             <button type="submit" class="btn primary" style="width:100%; justify-content:center;">สร้างสินค้า</button>
@@ -345,19 +357,11 @@
         });
 
         loadProductsList();
-        loadInventory();
+        
       }
 
       function loadProductsList() {
         api("/api/products").then(r => r.json()).then(prods => {
-          // Populate select
-          var select = document.getElementById("productSelect");
-          if (prods.length === 0) {
-            select.innerHTML = '<option value="">ไม่มีแพ็คเกจ กรุณาสร้างก่อน</option>';
-          } else {
-            select.innerHTML = prods.map(p => '<option value="'+p.code+'">'+p.title+'</option>').join("");
-          }
-
           // Populate products table
           var tbody = document.getElementById("productsTable");
           if (!prods.length) {
@@ -365,11 +369,16 @@
             return;
           }
           tbody.innerHTML = prods.map(p => {
+            var toggleBtn = p.is_active !== false 
+              ? '<button style="background:var(--success);color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;" onclick="toggleProduct(\''+p.id+'\', true)">เปิดขายอยู่</button>'
+              : '<button style="background:var(--muted);color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;" onclick="toggleProduct(\''+p.id+'\', false)">ปิดการขาย</button>';
             return '<tr>' +
               '<td>' + p.title + '</td>' +
               '<td>' + p.code + '</td>' +
               '<td>' + (p.price_satang / 100).toLocaleString() + '</td>' +
-              '<td>' + (p.expiry_date || "ไม่มีกำหนด") + '</td>' +
+              '<td>' + (p.sales_count || 0) + '</td>' +
+              '<td>' + (p.stock_limit || 0) + '</td>' +
+              '<td>' + toggleBtn + '</td>' +
               '<td><button class="delete-btn" onclick="deleteProduct(\'' + p.id + '\')">ลบ</button></td>' +
             '</tr>';
           }).join("");
@@ -383,7 +392,7 @@
           if (res.success) {
             toast("ลบสินค้าสำเร็จ", "ok");
             loadProductsList();
-            loadInventory();
+            
           } else {
             toast("ลบสินค้าล้มเหลว", "err");
           }
@@ -401,7 +410,11 @@
             code: document.getElementById("newProdCode").value,
             price_satang: document.getElementById("newProdPrice").value,
             expiry_date: document.getElementById("newProdExpiry").value,
-            description: document.getElementById("newProdDesc").value
+            description: document.getElementById("newProdDesc").value,
+            image_url: document.getElementById("newProdImage").value,
+            stock_limit: document.getElementById("newProdStock").value,
+            delivery_content: document.getElementById("newProdDelivery").value,
+            is_active: true
           })
         }).then(r => r.json()).then(res => {
           if (res.success) {
@@ -413,18 +426,18 @@
           }
         });
       });
+      
+      window.toggleProduct = function(id, active) {
+         api("/api/admin/products/" + id, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ is_active: !active })
+        }).then(r => r.json()).then(res => {
+          loadProductsList();
+        });
+      };
+      
 
-      function loadInventory() {
-        api("/api/admin/keys").then(r => r.json()).then(keys => {
-          var tbody = document.getElementById("keysInventoryTable");
-          if (!keys.length) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--muted);">ไม่มีสินค้าคีย์คงค้างในคลังสินค้า</td></tr>';
-            return;
-          }
-
-          tbody.innerHTML = keys.map(k => {
-            var statusBadge = k.sold 
-              ? '<span class="status-badge sold">Sold</span>' 
               : '<span class="status-badge unsold">Unsold</span>';
             var purchaser = k.purchaser_email || "—";
             var date = k.purchase_date || "—";
@@ -447,7 +460,7 @@
         api("/api/admin/keys/" + id, { method: "DELETE" }).then(r => r.json()).then(res => {
           if (res.success) {
             toast("ลบคีย์สำเร็จแล้ว", "ok");
-            loadInventory();
+            
           } else {
             toast("ลบคีย์ล้มเหลว", "err");
           }
@@ -455,7 +468,7 @@
       };
 
       // Handle Key Import form submit
-      document.getElementById("addKeysForm").addEventListener("submit", function (e) {
+      // keys form removed, function (e) {
         e.preventDefault();
         var prodCode = document.getElementById("productSelect").value;
         var keysList = document.getElementById("keysListArea").value;
@@ -468,7 +481,7 @@
           if (res.success) {
             toast("นำเข้าคีย์ใหม่ " + res.count + " คีย์ สำเร็จเรียบร้อยแล้ว!", "ok");
             document.getElementById("keysListArea").value = "";
-            loadInventory();
+            
           } else {
             toast("นำเข้าคีย์ล้มเหลว", "err");
           }

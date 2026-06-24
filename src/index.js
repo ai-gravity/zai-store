@@ -11,13 +11,13 @@ app.use('*', cors())
 async function readDB(c) {
   try {
     const data = await c.env.ZAI_STORE_DB.get('db')
-    if (!data) return { products: [], keys: [], purchases: [], config: {} }
+    if (!data) return { products: [], purchases: [], config: {} }
     const db = JSON.parse(data)
     recalculateStock(db)
     return db
   } catch (err) {
     console.error('Error reading DB, resetting database', err)
-    return { products: [], keys: [], purchases: [], config: {} }
+    return { products: [], purchases: [], config: {} }
   }
 }
 
@@ -29,12 +29,14 @@ async function writeDB(c, db) {
 
 // Recalculate Stock Counts
 function recalculateStock(db) {
+  if (!db.purchases) db.purchases = []
   db.products.forEach(prod => {
-    const totalKeys = db.keys.filter(k => k.product_code === prod.code)
-    const unsoldKeys = totalKeys.filter(k => !k.sold)
-    prod.stock_limit = totalKeys.length
-    prod.stock_remaining = unsoldKeys.length
-    prod.stock_sold_out = unsoldKeys.length === 0
+    const totalPurchases = db.purchases.filter(p => p.product_id === prod.id).length
+    prod.sales_count = totalPurchases
+    // Default limit is Infinity if not set, or parse it
+    const limit = prod.stock_limit > 0 ? prod.stock_limit : 999999
+    prod.stock_remaining = Math.max(0, limit - totalPurchases)
+    prod.stock_sold_out = prod.stock_remaining <= 0 || prod.is_active === false
   })
 }
 
@@ -115,8 +117,7 @@ app.post('/api/checkout', authenticate, async (c) => {
   }
 
   // Check stock
-  const unsoldKeys = db.keys.filter(k => k.product_code === product.code && !k.sold)
-  if (unsoldKeys.length === 0) {
+  if (product.stock_sold_out) {
     return c.json({ success: false, error: 'sold_out' }, 400)
   }
 
@@ -178,29 +179,17 @@ app.get('/checkout-success', async (c) => {
     return c.text('Product type not found', 404)
   }
 
-  // Fulfill one unsold key for this user
-  const unsoldKeyIndex = db.keys.findIndex(k => k.product_code === product.code && !k.sold)
-  if (unsoldKeyIndex === -1) {
-    return c.text('Product key is sold out! Please contact admin.', 400)
-  }
-
-  const keyObj = db.keys[unsoldKeyIndex]
-  keyObj.sold = true
-  keyObj.purchaser_email = email.toLowerCase()
-  keyObj.purchase_date = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })
-
   // Record purchase history
   db.purchases.push({
     id: 'pur_' + Math.random().toString(36).substr(2, 9),
+    product_id: product.id,
     email: email.toLowerCase(),
-    product_code: product.code,
-    key: keyObj.key,
     amount: product.price_satang,
-    date: new Date().toLocaleDateString('th-TH')
+    date: new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })
   })
 
   await writeDB(c, db)
-  console.log(`[Payment Fulfilled] Sold key ${keyObj.key} to ${email}`)
+  console.log(`[Payment Fulfilled] Sold ${product.title} to ${email}`)
 
   // Redirect back to store page with success flash
   return c.redirect('/?checkout_success=true')
@@ -211,19 +200,18 @@ app.get('/api/me/purchases', authenticate, async (c) => {
   const user = c.get('user')
   const db = await readDB(c)
   
-  const myKeys = db.keys.filter(k => k.sold && k.purchaser_email === user.email.toLowerCase())
+  const myPurchases = (db.purchases || []).filter(p => p.email === user.email.toLowerCase())
   
-  // Format matching store expectations
-  const list = myKeys.map(k => {
-    const product = db.products.find(p => p.code === k.product_code)
+  const list = myPurchases.map(pur => {
+    const product = db.products.find(p => p.id === pur.product_id)
     return {
       product_id: product ? product.id : '',
-      title: product ? product.title : 'API Key',
-      file_name: 'glm-5.2-key.md',
-      raw_key: k.key,
-      file_size: '0.00 MB',
-      access_type: 'one_time',
-      purchase_date: k.purchase_date
+      title: product ? product.title : 'สินค้า',
+      file_name: 'product_file.md',
+      raw_key: product ? product.delivery_content : 'ไม่มีข้อมูลไฟล์',
+      file_size: '0.01 MB',
+      access_type: 'lifetime',
+      purchase_date: pur.date
     }
   })
 
@@ -267,9 +255,13 @@ app.post('/api/admin/products', authenticate, requireAdmin, async (c) => {
     description: body.description || '',
     price_satang: parseInt(body.price_satang),
     expiry_date: body.expiry_date || '',
-    stock_limit: 0,
+    image_url: body.image_url || '',
+    stock_limit: parseInt(body.stock_limit) || 0,
+    is_active: body.is_active !== false,
+    delivery_content: body.delivery_content || '',
+    sales_count: 0,
     stock_remaining: 0,
-    stock_sold_out: true
+    stock_sold_out: false
   }
   
   db.products.push(newProduct)
@@ -293,91 +285,102 @@ app.delete('/api/admin/products/:id', authenticate, requireAdmin, async (c) => {
   return c.json({ success: true })
 })
 
-// 5. Add new Keys (Inventory)
-app.post('/api/admin/keys', authenticate, requireAdmin, async (c) => {
-  const { product_code, raw_keys_text } = await c.req.json()
-  if (!product_code || !raw_keys_text) {
-    return c.json({ success: false, error: 'Missing data' }, 400)
-  }
-
-  const db = await readDB(c)
-
-  // split by newlines, ignore empty
-  const lines = raw_keys_text.split('\n').map(l => l.trim()).filter(l => l.length > 0)
-  let added = 0
-  
-  lines.forEach(line => {
-    // Only add if not duplicate
-    if (!db.keys.find(k => k.key === line)) {
-      db.keys.push({
-        id: 'key_' + Math.random().toString(36).substr(2, 9),
-        product_code: product_code,
-        key: line,
-        sold: false,
-        purchaser_email: null,
-        purchase_date: null,
-        added_date: new Date().toLocaleDateString('th-TH')
-      })
-      added++
-    }
-  })
-
-  await writeDB(c, db)
-  return c.json({ success: true, added_count: added })
-})
-
-// 6. Delete a Key
-app.delete('/api/admin/keys/:id', authenticate, requireAdmin, async (c) => {
-  const key_id = c.req.param('id')
-  const db = await readDB(c)
-
-  const idx = db.keys.findIndex(k => k.id === key_id)
-  if (idx === -1) {
-    return c.json({ success: false, error: 'Key not found' }, 404)
-  }
-
-  db.keys.splice(idx, 1)
-  await writeDB(c, db)
-  return c.json({ success: true })
-})
-
-// 7. Get full inventory overview
+// 5. Get full inventory overview
 app.get('/api/admin/inventory', authenticate, requireAdmin, async (c) => {
   const db = await readDB(c)
   return c.json({
-    keys: db.keys,
+    purchases: db.purchases,
     products: db.products
   })
 })
 
 
-// GLM Monitor API Mocks
-app.get('/glm/api/usage', async (c) => {
+
+// 6. Edit Product
+app.put('/api/admin/products/:id', authenticate, requireAdmin, async (c) => {
+  const id = c.req.param('id')
+  const body = await c.req.json()
   const db = await readDB(c)
-  const globalKey = db.config?.globalApiKey || 'NONE'
   
-  return c.json({
-    success: true,
-    data: {
-      level: 'Premium (Global Key: ' + (globalKey !== 'NONE' ? 'SET' : 'NOT SET') + ')',
-      limits: [
-        { type: 'TOKENS_LIMIT', usage: 1200000, limit: 5000000, resetInSec: 3600 },
-        { type: 'TIME_LIMIT', usage: 15, limit: 100, resetInSec: 86400 }
-      ]
+  const product = db.products.find(p => p.id === id)
+  if (!product) return c.json({ success: false, error: 'Not found' }, 404)
+  
+  if (body.title !== undefined) product.title = body.title
+  if (body.description !== undefined) product.description = body.description
+  if (body.image_url !== undefined) product.image_url = body.image_url
+  if (body.price_satang !== undefined) product.price_satang = parseInt(body.price_satang)
+  if (body.stock_limit !== undefined) product.stock_limit = parseInt(body.stock_limit)
+  if (body.is_active !== undefined) product.is_active = body.is_active
+  if (body.delivery_content !== undefined) product.delivery_content = body.delivery_content
+  if (body.expiry_date !== undefined) product.expiry_date = body.expiry_date
+
+  await writeDB(c, db)
+  return c.json({ success: true, product })
+})
+
+// GLM Monitor API Mocks / Real Integration
+app.get('/glm/api/usage', async (c) => {
+  const db = await readDB(c);
+  const globalKey = db.config?.globalApiKey;
+  
+  if (!globalKey) {
+    return c.json({
+      success: true,
+      data: {
+        level: 'ยังไม่ได้ตั้งค่า Global Key',
+        limits: []
+      }
+    });
+  }
+
+  try {
+    // Call Zhipu AI (GLM) usage endpoint
+    const res = await fetch('https://open.bigmodel.cn/api/monitor/usage/quota/limit', {
+      headers: { 'Authorization': 'Bearer ' + globalKey }
+    });
+    
+    if (!res.ok) {
+      return c.json({
+        success: false,
+        error: 'Failed to fetch usage: ' + res.status
+      });
     }
-  });
+
+    const json = await res.json();
+    
+    // Attempt to parse limit from JSON structure
+    // Zhipu AI usually returns data.total, data.used, etc.
+    const used = json.data?.used || 0;
+    const total = json.data?.total || 0;
+    
+    return c.json({
+      success: true,
+      data: {
+        level: 'Premium (Z.ai API)',
+        limits: [
+          { type: 'TOKENS_LIMIT', usage: used, limit: total, resetInSec: 86400 }
+        ],
+        raw_response: json
+      }
+    });
+    
+  } catch (err) {
+    return c.json({ success: false, error: err.message });
+  }
 });
+
 app.get('/glm/api/model-usage', (c) => {
   return c.json({
     success: true,
     data: {
-      totalUsage: { totalTokensUsage: 45000000 },
-      daily: [ {date: '2026-06-20', usage: 100}, {date: '2026-06-21', usage: 200} ]
+      totalUsage: { totalTokensUsage: 0 },
+      daily: []
     }
   });
 });
+
 app.get('/glm/api/system-status', (c) => {
-  return c.json({ success: true, data: { speed: 1.5 } });
+  return c.json({ success: true, data: { speed: 1.0 } });
 });
 
 // Fallback to Pages static assets
