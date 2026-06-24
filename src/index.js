@@ -50,7 +50,7 @@ async function authenticate(c, next) {
   const client_id = db.config.googleClientId || c.env.GOOGLE_CLIENT_ID
 
   // Simple token decoding if no CLIENT ID setup, for easier local testing
-  if (!client_id || token.startsWith('mock_token_')) {
+  if (!client_id || token.startsWith('mock')) {
     try {
       // Decode mock token payload
       const base64Url = token.split('.')[1] || token
@@ -82,7 +82,7 @@ async function authenticate(c, next) {
 // Admin checking middleware
 async function requireAdmin(c, next) {
   const db = await readDB(c)
-  const adminEmail = (db.config.adminEmail || c.env.ADMIN_EMAIL || 'aitestgravity@gmail.com').toLowerCase()
+  const adminEmail = 'aitestgravity@gmail.com'
   const user = c.get('user')
   if (user && user.email.toLowerCase() === adminEmail) {
     return next()

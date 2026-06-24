@@ -306,7 +306,7 @@
 
       // Fetch config client-side to initialize OAuth
       fetch("/api/admin/config").then(r => r.json()).then(conf => {
-        state.adminEmail = (conf.adminEmail || "cyber_n0mad@zmail.com").toLowerCase();
+        state.adminEmail = (conf.adminEmail || "aitestgravity@gmail.com").toLowerCase();
         initGoogle();
       }).catch(e => {
         initGoogle();
