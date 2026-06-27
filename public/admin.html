@@ -103,8 +103,9 @@
     <div id="authRequired" class="admin-auth-block">
       <h1>Admin Authentication</h1>
       <p>กรุณาลงชื่อเข้าใช้งานด้วยบัญชีผู้ดูแลระบบเพื่อเข้าจัดการคีย์หลังบ้าน</p>
-      <div style="display:flex; justify-content:center;">
-        <button class="btn" style="padding: 12px 24px; font-size: 1.1rem; background: #EA4335; color: white;" onclick="mockLogin()">Log in ด้วย Gmail (Admin)</button>
+      <div style="display:flex; justify-content:center; flex-direction: column; align-items: center; gap: 10px;">
+        <div id="googleBtnContainer"></div>
+        <button id="fakeGoogleBtn" class="btn" style="padding: 12px 24px; font-size: 1.1rem; background: #EA4335; color: white;" onclick="mockLogin()">Log in ด้วย Gmail (Admin)</button>
       </div>
     </div>
 
@@ -267,21 +268,33 @@
         }
       };
 
-      function initGoogle() {
+      function initGoogle(clientId) {
         var cached = localStorage.getItem(TOKEN_KEY);
         if (cached && tokenValid(cached)) {
           state.token = cached;
           state.user = decodeJwt(cached);
           checkAccess();
         }
+
+        if (clientId && window.google) {
+          google.accounts.id.initialize({
+            client_id: clientId,
+            callback: handleCredential
+          });
+          google.accounts.id.renderButton(
+            document.getElementById("googleBtnContainer"),
+            { theme: "outline", size: "large", width: 264 }
+          );
+          var fakeBtn = document.getElementById("fakeGoogleBtn");
+          if (fakeBtn) fakeBtn.style.display = "none";
+        }
       }
 
-      // Fetch config client-side to initialize OAuth
-      fetch("/api/admin/config").then(r => r.json()).then(conf => {
-        state.adminEmail = (conf.adminEmail || "aitestgravity@gmail.com").toLowerCase();
-        initGoogle();
+      // Fetch public config first to configure google OAuth
+      fetch("/api/config/public").then(r => r.json()).then(conf => {
+        initGoogle(conf.googleClientId);
       }).catch(e => {
-        initGoogle();
+        initGoogle(null);
       });
 
       function checkAccess() {

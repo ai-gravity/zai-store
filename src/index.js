@@ -94,6 +94,12 @@ async function requireAdmin(c, next) {
 
 // --- Public / Reseller APIs ---
 
+// 0. Get Public Config
+app.get('/api/config/public', async (c) => {
+  const db = await readDB(c)
+  return c.json({ googleClientId: db.config.googleClientId })
+})
+
 // 1. Get Products
 app.get('/api/products', async (c) => {
   const db = await readDB(c)
